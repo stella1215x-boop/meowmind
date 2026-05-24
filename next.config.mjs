@@ -15,6 +15,14 @@ const withPWA = withPWAInit({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Prevent Next.js from bundling these native/DB packages — load as external Node modules
+  serverExternalPackages: [
+    '@prisma/client',
+    '@prisma/adapter-pg',
+    '@prisma/adapter-better-sqlite3',
+    'better-sqlite3',
+    'pg',
+  ],
   images: {
     // public/cats/ 의 실제 고양이 사진 최적화
     formats: ['image/webp', 'image/avif'],
