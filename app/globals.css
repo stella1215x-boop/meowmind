@@ -3,25 +3,103 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FFF8F0;
+  --foreground: #3d3d3d;
+
+  /* iOS Safe Area 변수 */
+  --sat: env(safe-area-inset-top);
+  --sar: env(safe-area-inset-right);
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #1a1a2e;
+  --foreground: #f0f0f0;
+}
+
+html {
+  /* 풀스크린 PWA에서 탄성 스크롤 방지 */
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-nunito), 'Nunito', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* iOS 고무줄 효과 방지 */
+  overscroll-behavior: none;
+  /* 전체 높이 */
+  height: 100%;
+  overflow-y: auto;
+  /* 탭 하이라이트 제거 */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 모바일 최대 너비 + safe area 적용 */
+.mobile-container {
+  @apply w-full max-w-mobile mx-auto;
+  min-height: 100svh; /* small viewport height — 모바일 주소창 대응 */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 하단 고정 요소 (탭바, 버튼) safe area */
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 16px);
+}
+
+/* 상단 safe area */
+.safe-top {
+  padding-top: max(env(safe-area-inset-top), 0px);
+}
+
+/* 스크롤 가능한 본문 영역 */
+.scroll-area {
+  @apply overflow-y-auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Cat character animations ─────────────────────────── */
+
+/* Greeting entrance — pops in from below with spring overshoot */
+@keyframes cat-greet {
+  0%   { transform: translateY(30px) scale(0.78); opacity: 0; }
+  52%  { transform: translateY(-16px) scale(1.09); opacity: 1; }
+  72%  { transform: translateY(6px) scale(0.97); }
+  88%  { transform: translateY(-5px) scale(1.02); }
+  100% { transform: translateY(0px) scale(1.00); opacity: 1; }
+}
+
+/* Fur particle floats upward */
+@keyframes fur-particle {
+  0%   { transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);   opacity: 0.8; }
+  60%  { opacity: 0.45; }
+  100% { transform: translateY(-58px) translateX(var(--particle-drift, 18px)) rotate(420deg) scale(0.4); opacity: 0; }
+}
+
+/* Tail wag (used as fallback when SMIL unavailable) */
+@keyframes tail-wag {
+  0%, 100% { transform: rotate(-16deg); }
+  50%      { transform: rotate(16deg);  }
+}
+
+/* Body breathe (CSS fallback) */
+@keyframes body-breathe {
+  0%, 100% { transform: translateY(0px); }
+  50%      { transform: translateY(-2.5px); }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  .bg-cream {
+    background-color: #FFF8F0;
+  }
+  /* 100svh: 모바일 주소창이 사라질 때 튀는 현상 방지 */
+  .h-svh {
+    height: 100svh;
   }
 }

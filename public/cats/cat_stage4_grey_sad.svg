@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" fill="#FFF8F0" rx="0" opacity="0"/>
+  <path d="M155.2,134.48000000000002 Q193.84,112.4 182.8,90.32000000000001" stroke="#6B7280" stroke-width="12.144" fill="none" stroke-linecap="round"/>
+     <text x="22.72" y="51.68" font-size="24.840000000000003" text-anchor="middle">⭐</text>
+  
+    <polygon points="44.8,65.48 25.47999999999999,24.08 79.024,46.16000000000001" fill="#9CA3AF"/>
+    <polygon points="50.31999999999999,59.96000000000001 34.864000000000004,32.36 72.4,48.92000000000001" fill="#E5E7EB"/>
+    <polygon points="155.2,65.48 174.52,24.08 120.976,46.16000000000001" fill="#9CA3AF"/>
+    <polygon points="149.68,59.96000000000001 165.136,32.36 127.6,48.92000000000001" fill="#E5E7EB"/>
+  
+  <circle cx="100" cy="112.4" r="55.2" fill="#9CA3AF"/>
+  <circle cx="100" cy="117.92" r="35.88" fill="#E5E7EB" opacity="0.4"/>
+  
+    <ellipse cx="79.024" cy="105.77600000000001" rx="7.176000000000001" ry="5.5200000000000005" fill="#5B4FCF"/>
+    <ellipse cx="120.976" cy="105.77600000000001" rx="7.176000000000001" ry="5.5200000000000005" fill="#5B4FCF"/>
+    <line x1="69.64" y1="101.36" x2="86.2" y2="106.88000000000001" stroke="#5B4FCF" stroke-width="3.8640000000000008" stroke-linecap="round"/>
+    <line x1="113.8" y1="106.88000000000001" x2="130.36" y2="101.36" stroke="#5B4FCF" stroke-width="3.8640000000000008" stroke-linecap="round"/>
+  <ellipse cx="100" cy="122.33600000000001" rx="4.968" ry="3.8640000000000008" fill="#F9A8D4"/>
+  
+    <path d="M93.376,126.75200000000001 Q87.856,132.272 82.336,127.85600000000001" stroke="#6B7280" stroke-width="3.8640000000000008" fill="none" stroke-linecap="round"/>
+    <path d="M106.624,126.75200000000001 Q112.144,132.272 117.664,127.85600000000001" stroke="#6B7280" stroke-width="3.8640000000000008" fill="none" stroke-linecap="round"/>
+  
+  
+    <line x1="91.72" y1="123.44000000000001" x2="58.599999999999994" y2="119.024" stroke="#6B7280" stroke-width="2.208" stroke-linecap="round" opacity="0.6"/>
+    <line x1="91.72" y1="126.2" x2="58.599999999999994" y2="128.96" stroke="#6B7280" stroke-width="2.208" stroke-linecap="round" opacity="0.6"/>
+    <line x1="108.28" y1="123.44000000000001" x2="141.4" y2="119.024" stroke="#6B7280" stroke-width="2.208" stroke-linecap="round" opacity="0.6"/>
+    <line x1="108.28" y1="126.2" x2="141.4" y2="128.96" stroke="#6B7280" stroke-width="2.208" stroke-linecap="round" opacity="0.6"/>
+  
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" fill="#FFF8F0" rx="0" opacity="0"/>
+  <path d="M160,134 Q202,110 190,86" stroke="#6B7280" stroke-width="13.2" fill="none" stroke-linecap="round"/>
+     <text x="100" y="17" font-size="33" text-anchor="middle">👑</text>
+  
+    <polygon points="40,59 19,14 77.2,38" fill="#9CA3AF"/>
+    <polygon points="46,53 29.200000000000003,23 70,41" fill="#E5E7EB"/>
+    <polygon points="160,59 181,14 122.8,38" fill="#9CA3AF"/>
+    <polygon points="154,53 170.8,23 130,41" fill="#E5E7EB"/>
+  
+  <circle cx="100" cy="110" r="60" fill="#9CA3AF"/>
+  <circle cx="100" cy="116" r="39" fill="#E5E7EB" opacity="0.4"/>
+  
+    <line x1="70" y1="101" x2="84.4" y2="101" stroke="#5B4FCF" stroke-width="5.3999999999999995" stroke-linecap="round"/>
+    <line x1="115.6" y1="101" x2="130" y2="101" stroke="#5B4FCF" stroke-width="5.3999999999999995" stroke-linecap="round"/>
+  <ellipse cx="100" cy="120.8" rx="5.3999999999999995" ry="4.2" fill="#F9A8D4"/>
+  
+    <path d="M92.8,125.6 Q86.8,131.6 80.8,126.8" stroke="#6B7280" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+    <path d="M107.2,125.6 Q113.2,131.6 119.2,126.8" stroke="#6B7280" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+  
+  
+    <line x1="91" y1="122" x2="55" y2="117.2" stroke="#6B7280" stroke-width="2.4" stroke-linecap="round" opacity="0.6"/>
+    <line x1="91" y1="125" x2="55" y2="128" stroke="#6B7280" stroke-width="2.4" stroke-linecap="round" opacity="0.6"/>
+    <line x1="109" y1="122" x2="145" y2="117.2" stroke="#6B7280" stroke-width="2.4" stroke-linecap="round" opacity="0.6"/>
+    <line x1="109" y1="125" x2="145" y2="128" stroke="#6B7280" stroke-width="2.4" stroke-linecap="round" opacity="0.6"/>
+  
+</svg>

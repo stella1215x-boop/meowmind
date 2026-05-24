@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeowMind — UI Preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #F3F0FF;
+    min-height: 100vh;
+    padding: 32px 24px 64px;
+  }
+  h1 { text-align: center; font-size: 28px; font-weight: 900; color: #374151; margin-bottom: 6px; }
+  .subtitle { text-align: center; color: #9CA3AF; font-size: 14px; margin-bottom: 40px; }
+
+  .grid { display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; }
+
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .screen-label { font-size: 13px; font-weight: 700; color: #6B7280; letter-spacing: 0.03em; }
+
+  .phone {
+    width: 320px;
+    min-height: 600px;
+    background: #FFF8F0;
+    border-radius: 36px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(99,60,180,0.15), 0 4px 16px rgba(0,0,0,0.08);
+    position: relative;
+    border: 6px solid #1F2937;
+  }
+  .notch {
+    width: 100px; height: 20px;
+    background: #1F2937;
+    border-radius: 0 0 14px 14px;
+    margin: 0 auto;
+    position: relative; z-index: 10;
+  }
+  .screen { padding: 16px 16px 72px; }
+
+  /* Colors */
+  :root {
+    --lavender: #C3B1E1;
+    --mint: #A8E6CF;
+    --mint-dark: #7DD4B0;
+    --cream: #FFF8F0;
+    --orange: #FB923C;
+  }
+
+  /* Bottom Nav */
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: white;
+    border-top: 1px solid #F3F4F6;
+    display: flex;
+    border-radius: 0 0 30px 30px;
+    overflow: hidden;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    font-size: 10px; color: #9CA3AF; font-weight: 600;
+  }
+  .nav-item.active { color: var(--lavender); }
+  .nav-icon { font-size: 20px; }
+
+  /* Components */
+  .streak-bar {
+    background: white; border-radius: 16px; padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06); border: 1px solid #F3F4F6;
+    margin-bottom: 16px;
+  }
+  .streak-num { font-size: 28px; font-weight: 900; color: #374151; }
+  .streak-label { font-size: 11px; color: #9CA3AF; }
+  .flame { font-size: 22px; }
+
+  .cat-area { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 20px; }
+  .cat-svg {
+    width: 110px; height: 110px;
+    background: var(--lavender); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 52px;
+  }
+  .cat-name { font-size: 20px; font-weight: 900; color: #374151; }
+  .cat-stage { font-size: 12px; color: #9CA3AF; }
+  .mood-badge {
+    font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 99px;
+    background: #DCFCE7; color: #166534;
+  }
+
+  .divider { height: 1px; background: #F3F4F6; margin: 16px 0; }
+
+  .journal-form { display: flex; flex-direction: column; gap: 10px; }
+  .journal-prompt {
+    background: var(--lavender); background: linear-gradient(135deg,#C3B1E1,#A8E6CF);
+    border-radius: 14px; padding: 12px 14px;
+    font-size: 12px; font-weight: 600; color: white; line-height: 1.5;
+  }
+  .input-field {
+    background: white; border-radius: 12px; padding: 10px 12px;
+    font-size: 12px; color: #374151; border: 1px solid #E5E7EB;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .input-num {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #F5F0FF; color: var(--lavender);
+    font-size: 10px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .submit-btn {
+    background: var(--lavender); color: white;
+    border-radius: 14px; padding: 12px; text-align: center;
+    font-size: 13px; font-weight: 800;
+  }
+
+  .written-box { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; padding: 16px 0; }
+  .written-emoji { font-size: 44px; }
+  .written-title { font-size: 18px; font-weight: 900; color: #374151; }
+  .written-sub { font-size: 12px; color: #9CA3AF; }
+  .share-btn {
+    border: 1.5px solid #DDD6FE; color: var(--lavender);
+    border-radius: 14px; padding: 9px 18px;
+    font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px;
+  }
+  .tip-box {
+    background: #F0FFF4; border-radius: 14px; padding: 10px 14px;
+    font-size: 11px; color: #6B7280; width: 100%;
+  }
+
+  /* History */
+  .month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .month-title { font-size: 15px; font-weight: 900; color: #374151; }
+  .nav-btn {
+    width: 28px; height: 28px; border-radius: 50%; background: white;
+    border: 1px solid #E5E7EB; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #6B7280;
+  }
+  .calendar { background: white; border-radius: 16px; padding: 12px; border: 1px solid #F3F4F6; margin-bottom: 12px; }
+  .cal-header { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 6px; }
+  .cal-day { text-align: center; font-size: 9px; font-weight: 700; color: #9CA3AF; padding: 3px 0; }
+  .cal-day:first-child { color: #F87171; }
+  .cal-day:last-child { color: #60A5FA; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+  .cal-cell { display: flex; flex-direction: column; align-items: center; padding: 3px 0; }
+  .cal-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600; color: #374151;
+  }
+  .cal-num.today { background: var(--lavender); color: white; }
+  .cal-num.sun { color: #F87171; }
+  .cal-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 1px; }
+  .dot-pos { background: var(--mint-dark); }
+  .dot-neu { background: var(--lavender); }
+  .dot-neg { background: #FCA5A5; }
+
+  .entry-card {
+    background: white; border-radius: 16px; padding: 12px 14px;
+    border: 1px solid #F3F4F6; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .date-badge {
+    background: #F5F0FF; border-radius: 10px; padding: 6px 8px;
+    display: flex; flex-direction: column; align-items: center; min-width: 40px;
+  }
+  .date-m { font-size: 9px; color: var(--lavender); font-weight: 700; }
+  .date-d { font-size: 16px; font-weight: 900; color: #374151; }
+  .date-w { font-size: 9px; color: #9CA3AF; }
+  .mood-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .entry-preview { font-size: 11px; color: #6B7280; }
+
+  /* Insights */
+  .insight-card { background: white; border-radius: 16px; padding: 14px; border: 1px solid #F3F4F6; margin-bottom: 10px; }
+  .insight-title { font-size: 13px; font-weight: 800; color: #374151; margin-bottom: 10px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 10px; }
+  .stat-box {
+    background: white; border-radius: 14px; border: 1px solid #F3F4F6;
+    padding: 10px 6px; text-align: center;
+  }
+  .stat-emoji { font-size: 18px; }
+  .stat-val { font-size: 14px; font-weight: 900; color: #374151; }
+  .stat-lbl { font-size: 9px; color: #9CA3AF; }
+  .chart-area { height: 80px; background: #F9FAFB; border-radius: 10px; display: flex; align-items: flex-end; padding: 8px; gap: 3px; overflow: hidden; }
+  .chart-bar { flex: 1; border-radius: 4px 4px 0 0; min-height: 4px; }
+  .keyword-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .keyword-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 99px; background: #F5F0FF; color: #7C3AED; }
+  .keyword-bar { flex: 1; height: 4px; background: #E5E7EB; border-radius: 99px; overflow: hidden; }
+  .keyword-fill { height: 100%; background: var(--lavender); border-radius: 99px; }
+  .heatmap { display: flex; flex-direction: column; gap: 2px; }
+  .heatmap-row { display: flex; gap: 2px; }
+  .hm-cell { width: 14px; height: 14px; border-radius: 3px; }
+  .hm-empty { background: #F3F4F6; }
+  .hm-pos { background: var(--mint-dark); }
+  .hm-neu { background: var(--lavender); opacity: 0.7; }
+  .hm-neg { background: #FCA5A5; }
+
+  /* Settings */
+  .settings-section { background: white; border-radius: 16px; border: 1px solid #F3F4F6; margin-bottom: 10px; overflow: hidden; }
+  .section-header { padding: 8px 14px; border-bottom: 1px solid #F9FAFB; }
+  .section-title { font-size: 10px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em; }
+  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; }
+  .setting-label { font-size: 13px; font-weight: 600; color: #374151; }
+  .setting-val { font-size: 12px; color: #9CA3AF; }
+  .toggle { width: 36px; height: 20px; background: var(--lavender); border-radius: 99px; position: relative; }
+  .toggle::after { content: ''; position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; }
+  .premium-section {
+    background: linear-gradient(135deg, #F5F0FF, #ECFDF5);
+    border: 1px solid #DDD6FE; border-radius: 16px; overflow: hidden; margin-bottom: 10px;
+  }
+  .premium-header { padding: 8px 14px; border-bottom: 1px solid #EDE9FE; }
+  .premium-title { font-size: 10px; font-weight: 700; color: var(--lavender); text-transform: uppercase; }
+  .upgrade-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; }
+  .upgrade-info { font-size: 12px; color: #6B7280; margin-top: 2px; }
+  .upgrade-arrow { color: #D1D5DB; }
+
+  /* Premium Modal */
+  .modal-sheet {
+    background: white; border-radius: 24px 24px 0 0; padding: 20px;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.12);
+  }
+  .handle { width: 36px; height: 4px; background: #E5E7EB; border-radius: 99px; margin: 0 auto 16px; }
+  .premium-price { font-size: 32px; font-weight: 900; color: var(--lavender); }
+  .feature-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; }
+  .feature-emoji { font-size: 18px; width: 24px; flex-shrink: 0; }
+  .feature-title { font-size: 13px; font-weight: 700; color: #374151; }
+  .feature-desc { font-size: 11px; color: #9CA3AF; }
+  .check { color: #4ADE80; margin-left: auto; flex-shrink: 0; }
+
+  /* Season Banner */
+  .season-banner {
+    background: linear-gradient(135deg, #FFF5F7, #FFF9F0);
+    border: 1px solid #FCE7F3; border-radius: 14px; padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  }
+  .season-emoji { font-size: 28px; }
+  .season-info { flex: 1; }
+  .season-name { font-size: 12px; font-weight: 800; color: #374151; }
+  .season-desc { font-size: 10px; color: #9CA3AF; }
+  .season-badge { font-size: 10px; font-weight: 700; color: var(--lavender); border: 1px solid var(--lavender); padding: 3px 8px; border-radius: 99px; }
+
+  /* Milestone Modal */
+  .milestone-bg {
+    background: linear-gradient(135deg,#F5F0FF,white);
+    border-radius: 24px; padding: 24px 20px; text-align: center;
+  }
+  .milestone-emoji { font-size: 40px; }
+  .milestone-title { font-size: 22px; font-weight: 900; color: #374151; margin: 8px 0 4px; }
+  .milestone-sub { font-size: 12px; color: #9CA3AF; }
+  .milestone-num { font-size: 52px; font-weight: 900; color: var(--lavender); }
+
+  /* Share Card */
+  .share-card {
+    background: linear-gradient(135deg,#F5F0FF,#ECFDF5);
+    border-radius: 16px; padding: 16px; text-align: center;
+  }
+  .share-cat { width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 8px; }
+  .share-streak { font-size: 28px; font-weight: 900; color: var(--lavender); }
+  .share-options { display: flex; gap: 8px; margin-top: 12px; }
+  .share-opt { flex: 1; background: var(--lavender); color: white; border-radius: 12px; padding: 10px 4px; text-align: center; font-size: 10px; font-weight: 700; }
+  .share-opt.secondary { background: #F9FAFB; color: #6B7280; }
+
+  /* Lock screen */
+  .lock-screen { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 24px 0; }
+  .lock-circle { width: 72px; height: 72px; background: #F5F0FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+  .lock-title { font-size: 16px; font-weight: 900; color: #374151; }
+  .lock-sub { font-size: 12px; color: #9CA3AF; line-height: 1.6; }
+  .progress-bar { width: 100%; height: 10px; background: #E5E7EB; border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--lavender); border-radius: 99px; }
+  .blur-preview { filter: blur(4px); pointer-events: none; }
+
+  /* OG Card */
+  .og-card {
+    background: linear-gradient(135deg,#F0EBFF,#E8F8F2);
+    border-radius: 20px; padding: 24px; text-align: center;
+    width: 200px; margin: 0 auto;
+  }
+  .og-cat { width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 12px; }
+  .og-name { font-size: 22px; font-weight: 900; color: #374151; }
+  .og-stage { font-size: 11px; background: #F5F0FF; color: var(--lavender); border-radius: 99px; padding: 3px 10px; font-weight: 700; display: inline-block; margin-top: 4px; }
+  .og-stats { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }
+  .og-stat { background: #F9FAFB; border-radius: 12px; padding: 8px 12px; }
+  .og-val { font-size: 18px; font-weight: 900; color: #374151; }
+  .og-lbl { font-size: 9px; color: #9CA3AF; }
+</style>
+</head>
+<body>
+
+<h1>🐱 MeowMind</h1>
+<p class="subtitle">매일 감사 일기 × 고양이 키우기 — UI 스크린 미리보기</p>
+
+<div class="grid">
+
+  <!-- ① 홈 (일기 작성 전) -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="season-banner">
+          <div class="season-emoji">🌸</div>
+          <div class="season-info">
+            <div class="season-name">벚꽃 고양이 등장!</div>
+            <div class="season-desc">봄바람에 꽃잎이 흩날려요</div>
+          </div>
+          <div class="season-badge">프리미엄 👑</div>
+        </div>
+        <div class="streak-bar">
+          <div>
+            <div class="streak-num">🔥 7</div>
+            <div class="streak-label">연속 스트릭</div>
+          </div>
+          <div style="text-align:right">
+            <div class="streak-num" style="font-size:18px;color:#9CA3AF">21</div>
+            <div class="streak-label">총 작성일</div>
+          </div>
+        </div>
+        <div class="cat-area">
+          <div class="cat-svg">🐱</div>
+          <div class="cat-name">나비</div>
+          <div class="cat-stage">장난꾸러기</div>
+          <div class="mood-badge">행복해요 😊</div>
+        </div>
+        <div class="divider"></div>
+        <div class="journal-form">
+          <div class="journal-prompt">오늘 새롭게 시도해 본 것, 혹은 처음 경험한 일이 있었나요? ✨</div>
+          <div class="input-field">
+            <div class="input-num">1</div>
+            <span style="color:#D1D5DB;font-size:11px">첫 번째 감사한 일을 적어보세요</span>
+          </div>
+          <div class="input-field">
+            <div class="input-num">2</div>
+            <span style="color:#D1D5DB;font-size:11px">두 번째 감사한 일을 적어보세요</span>
+          </div>
+          <div class="input-field">
+            <div class="input-num">3</div>
+            <span style="color:#D1D5DB;font-size:11px">세 번째 감사한 일을 적어보세요</span>
+          </div>
+          <div class="submit-btn">나비에게 전달하기 🐾</div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active"><span class="nav-icon">🏠</span>홈</div>
+        <div class="nav-item"><span class="nav-icon">📅</span>기록</div>
+        <div class="nav-item"><span class="nav-icon">📊</span>인사이트</div>
+        <div class="nav-item"><span class="nav-icon">⚙️</span>설정</div>
+      </div>
+    </div>
+    <div class="screen-label">① 홈 — 일기 작성 전</div>
+  </div>
+
+  <!-- ② 홈 (작성 완료) -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="streak-bar">
+          <div>
+            <div class="streak-num">🔥 8</div>
+            <div class="streak-label">연속 스트릭</div>
+          </div>
+          <div style="text-align:right">
+            <div class="streak-num" style="font-size:18px;color:#9CA3AF">22</div>
+            <div class="streak-label">총 작성일</div>
+          </div>
+        </div>
+        <div class="cat-area">
+          <div class="cat-svg" style="background:var(--mint)">😻</div>
+          <div class="cat-name">나비</div>
+          <div class="cat-stage">장난꾸러기</div>
+          <div class="mood-badge">행복해요 😊</div>
+        </div>
+        <div class="divider"></div>
+        <div class="written-box">
+          <div class="written-emoji">✨</div>
+          <div>
+            <div class="written-title">오늘 일지를 완료했어요!</div>
+            <div class="written-sub">나비가 행복해하고 있어요 🐱<br>내일 또 만나요!</div>
+          </div>
+          <div class="tip-box">매일 꾸준히 쓰면 나비가 더 빨리 자라요 🌱</div>
+          <div class="share-btn"><span>📤</span>성장 카드 공유하기</div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active"><span class="nav-icon">🏠</span>홈</div>
+        <div class="nav-item"><span class="nav-icon">📅</span>기록</div>
+        <div class="nav-item"><span class="nav-icon">📊</span>인사이트</div>
+        <div class="nav-item"><span class="nav-icon">⚙️</span>설정</div>
+      </div>
+    </div>
+    <div class="screen-label">② 홈 — 작성 완료</div>
+  </div>
+
+  <!-- ③ 마일스톤 모달 -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen" style="background:rgba(0,0,0,0.3);display:flex;align-items:center;padding:20px;">
+        <div class="milestone-bg" style="width:100%">
+          <div class="milestone-emoji">🌿</div>
+          <div class="milestone-title">14일 달성!</div>
+          <div class="milestone-sub">2주 연속! 대단해요</div>
+          <div style="margin:16px 0;display:flex;flex-direction:column;align-items:center;gap:8px">
+            <div class="cat-svg" style="width:80px;height:80px;font-size:36px;background:var(--mint)">😻</div>
+            <div style="background:white;border-radius:12px;padding:8px 14px;font-size:11px;text-align:center">
+              <div style="font-weight:800;color:var(--lavender)">나비 🐱</div>
+              <div style="color:#9CA3AF;margin-top:2px">무럭무럭 자랐어요</div>
+            </div>
+          </div>
+          <div style="background:#F9FAFB;border-radius:14px;padding:12px;margin-bottom:14px">
+            <div class="milestone-num">14</div>
+            <div style="font-size:11px;color:#9CA3AF">일 연속 감사 일기 ✨</div>
+          </div>
+          <div style="background:var(--lavender);color:white;border-radius:14px;padding:12px;font-weight:800;font-size:13px">계속하기 🐾</div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active"><span class="nav-icon">🏠</span>홈</div>
+        <div class="nav-item"><span class="nav-icon">📅</span>기록</div>
+        <div class="nav-item"><span class="nav-icon">📊</span>인사이트</div>
+        <div class="nav-item"><span class="nav-icon">⚙️</span>설정</div>
+      </div>
+    </div>
+    <div class="screen-label">③ 마일스톤 모달 (14일)</div>
+  </div>
+
+  <!-- ④ 히스토리 -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:18px;font-weight:900;color:#374151">일기 기록</div>
+          <div style="font-size:11px;color:#9CA3AF">22개의 일기</div>
+        </div>
+        <div class="month-nav">
+          <div class="nav-btn">‹</div>
+          <div class="month-title">2025년 5월</div>
+          <div class="nav-btn" style="opacity:0.3">›</div>
+        </div>
+        <div class="calendar">
+          <div class="cal-header">
+            <div class="cal-day">일</div><div class="cal-day">월</div><div class="cal-day">화</div>
+            <div class="cal-day">수</div><div class="cal-day">목</div><div class="cal-day">금</div>
+            <div class="cal-day" style="color:#60A5FA">토</div>
+          </div>
+          <div class="cal-grid">
+            <div></div>
+            <div class="cal-cell"><div class="cal-num">1</div><div class="cal-dot dot-pos"></div></div>
+            <div class="cal-cell"><div class="cal-num">2</div><div class="cal-dot dot-neu"></div></div>
+            <div class="cal-cell"><div class="cal-num">3</div><div class="cal-dot dot-pos"></div></div>
+            <div class="cal-cell"><div class="cal-num">4</div><div class="cal-dot dot-neg"></div></div>
+            <div class="cal-cell"><div class="cal-num">5</div><div class="cal-dot dot-pos"></div></div>
+            <div class="cal-cell"><div class="cal-num">6</div></div>
+            <div class="cal-cell"><div class="cal-num sun">7</div></div>
+            <div class="cal-cell"><div class="cal-num">8</div><div class="cal-dot dot-pos"></div></div>
+            <div class="cal-cell"><div class="cal-num">9</div><div class="cal-dot dot-pos"></div></div>
+            <div class="cal-cell"><div class="cal-num">10</div><div class="cal-dot dot-neu"></div></div>
+            <div class="cal-cell"><div class="cal-num">11</div><div class="cal-dot dot-pos"></div></div>
+            <div class="cal-cell"><div class="cal-num">12</div><div class="cal-dot dot-pos"></div></div>
+            <div class="cal-cell"><div class="cal-num">13</div></div>
+            <div class="cal-cell"><div class="cal-num sun">14</div></div>
+            <div class="cal-cell"><div class="cal-num">15</div><div class="cal-dot dot-pos"></div></div>
+            <div class="cal-cell"><div class="cal-num">16</div><div class="cal-dot dot-neu"></div></div>
+            <div class="cal-cell"><div class="cal-num">17</div><div class="cal-dot dot-pos"></div></div>
+            <div class="cal-cell"><div class="cal-num">18</div><div class="cal-dot dot-pos"></div></div>
+            <div class="cal-cell"><div class="cal-num">19</div><div class="cal-dot dot-pos"></div></div>
+            <div class="cal-cell"><div class="cal-num">20</div></div>
+            <div class="cal-cell"><div class="cal-num sun">21</div></div>
+            <div class="cal-cell"><div class="cal-num">22</div><div class="cal-dot dot-pos"></div></div>
+            <div class="cal-cell"><div class="cal-num today">23</div><div class="cal-dot dot-pos"></div></div>
+          </div>
+        </div>
+        <div class="entry-card">
+          <div class="date-badge"><div class="date-m">5월</div><div class="date-d">23</div><div class="date-w">금요일</div></div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;margin-bottom:4px">
+              <span class="mood-dot dot-pos"></span>
+              <span style="font-size:10px;font-weight:700;background:#DCFCE7;color:#166534;padding:2px 8px;border-radius:99px">긍정적</span>
+            </div>
+            <div class="entry-preview">오늘 새로운 카페를 발견해서 너무 좋았어요...</div>
+          </div>
+          <span style="color:#D1D5DB;font-size:12px">›</span>
+        </div>
+        <div class="entry-card">
+          <div class="date-badge"><div class="date-m">5월</div><div class="date-d">22</div><div class="date-w">목요일</div></div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;margin-bottom:4px">
+              <span class="mood-dot dot-neu"></span>
+              <span style="font-size:10px;font-weight:700;background:#F3F4F6;color:#6B7280;padding:2px 8px;border-radius:99px">보통</span>
+            </div>
+            <div class="entry-preview">평범한 하루였지만 저녁 산책이...</div>
+          </div>
+          <span style="color:#D1D5DB;font-size:12px">›</span>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item"><span class="nav-icon">🏠</span>홈</div>
+        <div class="nav-item active"><span class="nav-icon">📅</span>기록</div>
+        <div class="nav-item"><span class="nav-icon">📊</span>인사이트</div>
+        <div class="nav-item"><span class="nav-icon">⚙️</span>설정</div>
+      </div>
+    </div>
+    <div class="screen-label">④ 히스토리</div>
+  </div>
+
+  <!-- ⑤ 인사이트 (해금됨) -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div style="font-size:18px;font-weight:900;color:#374151;margin-bottom:12px">인사이트</div>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="stat-emoji">📝</div><div class="stat-val">42일</div><div class="stat-lbl">총 일기</div></div>
+          <div class="stat-box"><div class="stat-emoji">😊</div><div class="stat-val" style="font-size:11px">긍정적</div><div class="stat-lbl">주요 감정</div></div>
+          <div class="stat-box"><div class="stat-emoji">✨</div><div class="stat-val">68%</div><div class="stat-lbl">긍정 비율</div></div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-title">📈 주간 무드 트렌드</div>
+          <div class="chart-area">
+            <div class="chart-bar" style="background:var(--mint);height:45%"></div>
+            <div class="chart-bar" style="background:var(--mint);height:60%"></div>
+            <div class="chart-bar" style="background:var(--mint);height:50%"></div>
+            <div class="chart-bar" style="background:var(--mint);height:75%"></div>
+            <div class="chart-bar" style="background:var(--mint);height:65%"></div>
+            <div class="chart-bar" style="background:var(--mint);height:80%"></div>
+            <div class="chart-bar" style="background:var(--lavender);height:30%"></div>
+            <div class="chart-bar" style="background:var(--lavender);height:25%"></div>
+            <div class="chart-bar" style="background:var(--lavender);height:20%"></div>
+          </div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-title">💬 자주 쓴 단어 Top 5</div>
+          <div class="keyword-row"><span class="keyword-badge">감사</span><div class="keyword-bar"><div class="keyword-fill" style="width:100%"></div></div><span style="font-size:10px;color:#D1D5DB">28</span></div>
+          <div class="keyword-row"><span class="keyword-badge">행복</span><div class="keyword-bar"><div class="keyword-fill" style="width:75%"></div></div><span style="font-size:10px;color:#D1D5DB">21</span></div>
+          <div class="keyword-row"><span class="keyword-badge">고양이</span><div class="keyword-bar"><div class="keyword-fill" style="width:55%"></div></div><span style="font-size:10px;color:#D1D5DB">15</span></div>
+          <div class="keyword-row"><span class="keyword-badge">산책</span><div class="keyword-bar"><div class="keyword-fill" style="width:40%"></div></div><span style="font-size:10px;color:#D1D5DB">11</span></div>
+          <div class="keyword-row"><span class="keyword-badge">맛있</span><div class="keyword-bar"><div class="keyword-fill" style="width:28%"></div></div><span style="font-size:10px;color:#D1D5DB">8</span></div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-title">📅 12주 작성 현황</div>
+          <div class="heatmap">
+            <div class="heatmap-row">
+              <div class="hm-cell hm-pos"></div><div class="hm-cell hm-neu"></div><div class="hm-cell hm-pos"></div><div class="hm-cell hm-pos"></div><div class="hm-cell hm-empty"></div><div class="hm-cell hm-pos"></div><div class="hm-cell hm-empty"></div>
+            </div>
+            <div class="heatmap-row">
+              <div class="hm-cell hm-pos"></div><div class="hm-cell hm-pos"></div><div class="hm-cell hm-pos"></div><div class="hm-cell hm-neg"></div><div class="hm-cell hm-pos"></div><div class="hm-cell hm-pos"></div><div class="hm-cell hm-empty"></div>
+            </div>
+            <div class="heatmap-row">
+              <div class="hm-cell hm-neu"></div><div class="hm-cell hm-pos"></div><div class="hm-cell hm-empty"></div><div class="hm-cell hm-pos"></div><div class="hm-cell hm-pos"></div><div class="hm-cell hm-pos"></div><div class="hm-cell hm-empty"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item"><span class="nav-icon">🏠</span>홈</div>
+        <div class="nav-item"><span class="nav-icon">📅</span>기록</div>
+        <div class="nav-item active"><span class="nav-icon">📊</span>인사이트</div>
+        <div class="nav-item"><span class="nav-icon">⚙️</span>설정</div>
+      </div>
+    </div>
+    <div class="screen-label">⑤ 인사이트 (Day 30+)</div>
+  </div>
+
+  <!-- ⑥ 인사이트 잠금 -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div style="font-size:18px;font-weight:900;color:#374151;margin-bottom:16px">인사이트</div>
+        <div class="lock-screen">
+          <div class="lock-circle">🔒</div>
+          <div>
+            <div class="lock-title">30일 달성 후 해금!</div>
+            <div class="lock-sub">나비와 함께 16일 더 쓰면<br>나만의 감사 인사이트를 볼 수 있어요</div>
+          </div>
+          <div class="progress-bar" style="width:100%"><div class="progress-fill" style="width:47%"></div></div>
+          <div style="font-size:11px;color:#9CA3AF">14 / 30일</div>
+          <div style="width:100%;display:flex;flex-direction:column;gap:8px;position:relative">
+            <div class="insight-card blur-preview" style="margin:0">
+              <div style="height:12px;background:#E5E7EB;border-radius:6px;width:40%;margin-bottom:10px"></div>
+              <div style="height:60px;background:#F3F4F6;border-radius:10px"></div>
+            </div>
+            <div class="insight-card blur-preview" style="margin:0">
+              <div style="height:12px;background:#E5E7EB;border-radius:6px;width:30%;margin-bottom:10px"></div>
+              <div style="height:40px;background:#F3F4F6;border-radius:10px"></div>
+            </div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:24px">🔒</div>
+          </div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item"><span class="nav-icon">🏠</span>홈</div>
+        <div class="nav-item"><span class="nav-icon">📅</span>기록</div>
+        <div class="nav-item active"><span class="nav-icon">📊</span>인사이트</div>
+        <div class="nav-item"><span class="nav-icon">⚙️</span>설정</div>
+      </div>
+    </div>
+    <div class="screen-label">⑥ 인사이트 잠금 (Day 30 미만)</div>
+  </div>
+
+  <!-- ⑦ 설정 -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div style="font-size:18px;font-weight:900;color:#374151;margin-bottom:16px">설정</div>
+        <div class="settings-section">
+          <div class="section-header"><div class="section-title">계정</div></div>
+          <div class="setting-row"><div class="setting-label">이메일</div><div class="setting-val">user@email.com</div></div>
+        </div>
+        <div class="premium-section">
+          <div class="premium-header"><div class="premium-title">프리미엄</div></div>
+          <div class="upgrade-row">
+            <div>
+              <div class="setting-label">프리미엄으로 업그레이드</div>
+              <div class="upgrade-info">시즌 고양이 · 고급 인사이트 · ₩6,900/월</div>
+            </div>
+            <div class="upgrade-arrow">›</div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="section-header"><div class="section-title">알림</div></div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">일일 리마인더</div>
+              <div style="font-size:10px;color:var(--mint-dark);margin-top:2px">매일 아침 알림이 켜져 있어요</div>
+            </div>
+            <div class="toggle"></div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="section-header"><div class="section-title">앱 정보</div></div>
+          <div class="setting-row"><div class="setting-label">버전</div><div class="setting-val">1.0.0</div></div>
+          <div class="setting-row"><div class="setting-label">문의</div><div class="setting-val">support@meowmind.app</div></div>
+        </div>
+        <div class="settings-section">
+          <div class="setting-row"><div class="setting-label" style="color:#F87171">로그아웃</div></div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item"><span class="nav-icon">🏠</span>홈</div>
+        <div class="nav-item"><span class="nav-icon">📅</span>기록</div>
+        <div class="nav-item"><span class="nav-icon">📊</span>인사이트</div>
+        <div class="nav-item active"><span class="nav-icon">⚙️</span>설정</div>
+      </div>
+    </div>
+    <div class="screen-label">⑦ 설정</div>
+  </div>
+
+  <!-- ⑧ 프리미엄 모달 -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+      <div style="position:relative;height:100%">
+        <!-- 뒤 배경 희미하게 -->
+        <div style="padding:16px;opacity:0.2">
+          <div style="font-size:18px;font-weight:900;color:#374151;margin-bottom:12px">설정</div>
+        </div>
+        <!-- 모달 시트 -->
+        <div style="position:absolute;bottom:0;left:0;right:0" class="modal-sheet">
+          <div class="handle"></div>
+          <div style="text-align:center;margin-bottom:16px">
+            <div style="font-size:32px">👑</div>
+            <div style="font-size:18px;font-weight:900;color:#374151">MeowMind Premium</div>
+            <div style="font-size:12px;color:#9CA3AF;margin-top:4px">나비와 더 깊이 성장해요</div>
+          </div>
+          <div class="feature-row"><div class="feature-emoji">🎭</div><div><div class="feature-title">시즌 한정 고양이</div><div class="feature-desc">벚꽃, 할로윈, 크리스마스 스킨</div></div><div class="check">✓</div></div>
+          <div class="feature-row"><div class="feature-emoji">📊</div><div><div class="feature-title">고급 인사이트</div><div class="feature-desc">무드 상관관계 · 단어 트렌드 분석</div></div><div class="check">✓</div></div>
+          <div class="feature-row"><div class="feature-emoji">🔔</div><div><div class="feature-title">맞춤 리마인더</div><div class="feature-desc">최대 3개 알림 시간 설정</div></div><div class="check">✓</div></div>
+          <div class="feature-row"><div class="feature-emoji">🌈</div><div><div class="feature-title">고양이 배경 테마</div><div class="feature-desc">집, 정원, 우주 등 6가지 배경</div></div><div class="check">✓</div></div>
+          <div style="background:#F5F0FF;border-radius:14px;padding:12px;text-align:center;margin:12px 0">
+            <div class="premium-price">₩6,900</div>
+            <div style="font-size:11px;color:#9CA3AF">/ 월 · 언제든지 해지 가능</div>
+          </div>
+          <div style="background:var(--lavender);color:white;border-radius:14px;padding:12px;text-align:center;font-weight:800;font-size:13px">프리미엄 시작하기 👑</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">⑧ 프리미엄 모달</div>
+  </div>
+
+  <!-- ⑨ 공유 카드 (OG Image) -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+      <div style="position:relative;height:100%">
+        <div style="padding:16px;opacity:0.25">
+          <div style="font-size:18px;font-weight:900;color:#374151">홈</div>
+        </div>
+        <div style="position:absolute;bottom:0;left:0;right:0" class="modal-sheet">
+          <div class="handle"></div>
+          <div style="font-size:14px;font-weight:900;color:#374151;text-align:center;margin-bottom:12px">성장 카드 공유하기</div>
+          <div class="og-card">
+            <div style="font-size:11px;font-weight:800;color:#374151;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px">
+              <span style="font-size:16px">🐱</span> MeowMind
+            </div>
+            <div class="og-cat">😻</div>
+            <div class="og-name">나비</div>
+            <div class="og-stage">장난꾸러기</div>
+            <div class="og-stats">
+              <div class="og-stat"><div class="og-val">🔥 22</div><div class="og-lbl">연속 스트릭</div></div>
+              <div class="og-stat"><div class="og-val">📝 42</div><div class="og-lbl">총 작성일</div></div>
+            </div>
+          </div>
+          <div class="share-options">
+            <div class="share-opt">📤<br>공유</div>
+            <div class="share-opt secondary">💾<br>저장</div>
+            <div class="share-opt secondary">🔗<br>링크</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">⑨ 공유 카드 모달</div>
+  </div>
+
+</div>
+
+<div style="text-align:center;margin-top:48px;color:#9CA3AF;font-size:12px">
+  <strong style="color:#C3B1E1">MeowMind</strong> · Next.js 14 + Tailwind + Prisma + NextAuth + PWA<br>
+  브라우저에서 직접 열면 실제 스크린을 확인할 수 있습니다
+</div>
+
+</body>
+</html>
