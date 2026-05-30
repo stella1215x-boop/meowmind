@@ -50,6 +50,7 @@ model User {
   emailVerified  DateTime?
   image          String?
   reminderTime   String?        // "HH:MM" format, e.g. "21:00"
+  password       String?        // bcrypt hash — null for legacy OAuth users
   onboardingDone Boolean        @default(false)
   isPremium      Boolean        @default(false)
   premiumUntil   DateTime?
