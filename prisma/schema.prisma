@@ -2,10 +2,8 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// LOCAL DEV  → DATABASE_PROVIDER=sqlite   in .env.local
-// PRODUCTION → DATABASE_PROVIDER=postgresql  in Vercel env vars
 datasource db {
-  provider = env("DATABASE_PROVIDER")
+  provider = "postgresql"
 }
 
 model Account {
