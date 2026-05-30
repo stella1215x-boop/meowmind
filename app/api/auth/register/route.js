@@ -51,9 +51,9 @@ export async function POST(req) {
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error('[register]', err)
+    console.error('[register]', err.message)
     return NextResponse.json(
-      { error: err.message ?? String(err) },
+      { error: '서버 오류가 발생했어요. 잠시 후 다시 시도해 주세요.' },
       { status: 500 }
     )
   }

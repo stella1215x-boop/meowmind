@@ -2,10 +2,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// LOCAL DEV  → provider = "sqlite"
-// PRODUCTION → change to "postgresql" before running prisma db push on Supabase
+// LOCAL DEV  → DATABASE_PROVIDER=sqlite   in .env.local
+// PRODUCTION → DATABASE_PROVIDER=postgresql  in Vercel env vars
 datasource db {
-  provider = "sqlite"
+  provider = env("DATABASE_PROVIDER")
 }
 
 model Account {
