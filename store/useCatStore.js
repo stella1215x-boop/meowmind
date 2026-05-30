@@ -1,20 +1,33 @@
 import { create } from 'zustand'
+import { getIntimacyTier } from '@/lib/catGrowthService'
+
+function pickAnimation(intimacy) {
+  const tier = getIntimacyTier(intimacy)
+  const pool = tier.tapAnims
+  return pool[Math.floor(Math.random() * pool.length)]
+}
 
 const useCatStore = create((set, get) => ({
   cat: null,
   emotionalState: 'neutral',
   hasWrittenToday: false,
-  playAnimation: null,   // 'purr' | 'wag' | 'spin' | 'roll' | 'knock' | 'eat'
+  playAnimation: null,   // string | null
   milestone: null,       // 7 | 14 | 30 | 60 | 100
-  coinsEarned: null,     // transient: shown after journal submit { amount, streakBonus }
+  coinsEarned: null,     // { amount, streakBonus } | null
 
   hydrate(cat, emotionalState, hasWrittenToday) {
     set({ cat, emotionalState, hasWrittenToday })
   },
 
   onJournalSubmitted(updatedCat, milestone, coinsEarned = 0, streakBonus = 0) {
-    const animations = ['purr', 'wag', 'spin', 'roll', 'knock']
-    const anim = animations[Math.floor(Math.random() * animations.length)]
+    const intimacy = updatedCat?.intimacy ?? 0
+    // After writing, always feel happy → pick a joyful animation
+    const joyful =
+      intimacy >= 80 ? ['headbutt', 'nuzzle', 'spin', 'knead', 'purr'] :
+      intimacy >= 60 ? ['purr', 'wag', 'spin', 'roll', 'nuzzle']       :
+      intimacy >= 40 ? ['purr', 'wag', 'roll', 'knock']                 :
+                       ['purr', 'wag']
+    const anim = joyful[Math.floor(Math.random() * joyful.length)]
     set({
       cat: updatedCat,
       emotionalState: 'happy',
@@ -30,14 +43,13 @@ const useCatStore = create((set, get) => ({
   },
 
   triggerTapAnimation() {
-    // Don't stack if one is already playing
     if (get().playAnimation) return
-    const animations = ['purr', 'wag', 'spin', 'roll', 'knock']
-    const anim = animations[Math.floor(Math.random() * animations.length)]
+    const intimacy = get().cat?.intimacy ?? 0
+    const anim = pickAnimation(intimacy)
     set({ playAnimation: anim })
   },
 
-  // Feed the cat: deduct 1 food, play eat animation, update store
+  // Feed the cat — full cat object returned so intimacy updates
   async feedCat() {
     if (get().playAnimation) return
     const cat = get().cat
@@ -49,7 +61,13 @@ const useCatStore = create((set, get) => ({
       const res = await fetch('/api/cat/feed', { method: 'POST' })
       if (res.ok) {
         const data = await res.json()
-        set({ cat: { ...cat, foodCount: data.foodCount } })
+        // Use full cat object from response (includes updated intimacy)
+        if (data.cat) {
+          set({ cat: data.cat })
+        } else {
+          // Fallback: patch just foodCount
+          set({ cat: { ...cat, foodCount: data.foodCount } })
+        }
       }
     } catch {
       // silent fail — animation already fired

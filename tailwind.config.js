@@ -54,6 +54,27 @@ module.exports = {
 
         // 코인 획득 팝업
         'coin-pop': 'coin-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) both',
+
+        // ── Intimacy tier idle animations ────────────────────────────────
+        // Shy (0-19): cat leans back slightly
+        'shy':     'shy 4s ease-in-out infinite',
+        // Curious (20-39): curious head tilt
+        'peek':    'peek 3s ease-in-out infinite',
+        // Friendly+ idle: handled by body-breathe (existing)
+        // Attached: handled by float (existing)
+        // Soul Bond (80-99): kneading / making biscuits
+        'knead':   'knead 0.7s ease-in-out 3',
+        // Legendary: excited fast bounce
+        'excited': 'excited 0.4s ease-in-out 4',
+
+        // ── Intimacy tap animations ────────────────────────────────────────
+        // Head-butt: cat bonks you
+        'headbutt': 'headbutt 0.35s ease-in-out 2',
+        // Nuzzle: side-to-side rub
+        'nuzzle':   'nuzzle 0.5s ease-in-out 3',
+
+        // Heart float particle
+        'heart-float': 'heart-float 1.4s ease-out forwards',
       },
       keyframes: {
         wiggle: {
@@ -129,6 +150,45 @@ module.exports = {
           '0%':   { transform: 'translateY(0) scale(0.5)', opacity: '0' },
           '60%':  { transform: 'translateY(-28px) scale(1.15)', opacity: '1' },
           '100%': { transform: 'translateY(-40px) scale(1)', opacity: '0' },
+        },
+
+        // ── Intimacy keyframes ──────────────────────────────────────────────
+        shy: {
+          '0%, 100%': { transform: 'scale(0.96) rotate(-2deg) translateX(-2px)' },
+          '50%':      { transform: 'scale(0.98) rotate(0deg) translateX(0px)' },
+        },
+        peek: {
+          '0%, 100%': { transform: 'rotate(0deg) scale(1)' },
+          '30%':      { transform: 'rotate(-5deg) scale(1.03)' },
+          '70%':      { transform: 'rotate(5deg) scale(1.03)' },
+        },
+        knead: {
+          '0%, 100%': { transform: 'translateY(0) rotate(0deg) scale(1)' },
+          '25%':      { transform: 'translateY(-5px) rotate(-3deg) scale(1.04)' },
+          '75%':      { transform: 'translateY(-5px) rotate(3deg) scale(1.04)' },
+        },
+        excited: {
+          '0%, 100%': { transform: 'translateY(0) scale(1)' },
+          '25%':      { transform: 'translateY(-14px) scale(1.1)' },
+          '50%':      { transform: 'translateY(0) scale(0.95)' },
+          '75%':      { transform: 'translateY(-8px) scale(1.06)' },
+        },
+        headbutt: {
+          '0%, 100%': { transform: 'translateX(0) rotate(0deg)' },
+          '40%':      { transform: 'translateX(10px) rotate(8deg)' },
+          '60%':      { transform: 'translateX(-4px) rotate(-3deg)' },
+        },
+        nuzzle: {
+          '0%, 100%': { transform: 'translateX(0) rotate(0deg)' },
+          '20%':      { transform: 'translateX(-8px) rotate(-6deg)' },
+          '40%':      { transform: 'translateX(8px) rotate(6deg)' },
+          '60%':      { transform: 'translateX(-6px) rotate(-4deg)' },
+          '80%':      { transform: 'translateX(6px) rotate(4deg)' },
+        },
+        'heart-float': {
+          '0%':   { transform: 'translateY(0) scale(0.5)', opacity: '1' },
+          '60%':  { transform: 'translateY(-40px) scale(1.2)', opacity: '0.9' },
+          '100%': { transform: 'translateY(-70px) scale(1)', opacity: '0' },
         },
       },
     },

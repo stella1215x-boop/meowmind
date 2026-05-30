@@ -83,6 +83,7 @@ model Cat {
   lastFedAt        DateTime?
   coins            Int       @default(0)   // earned by writing sentences
   foodCount        Int       @default(0)   // purchased with coins
+  intimacy         Int       @default(0)   // 0-100: bond level, grows via journal + feeding
   createdAt        DateTime  @default(now())
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

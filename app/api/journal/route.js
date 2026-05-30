@@ -71,14 +71,17 @@ export async function POST(req) {
   const newStage = calcStage(newTotal)
   const isMilestone = MILESTONES.includes(newTotal) ? newTotal : null
 
-  // 코인 계산: 문장 당 10코인 (3문장 = 30코인)
+  // Coins: 10 per sentence (3 sentences = 30 coins)
   const COINS_PER_SENTENCE = 10
   const validCount = sentences.filter(s => s.trim().length >= 2).length
   const coinsEarned = validCount * COINS_PER_SENTENCE
-  // 7일 스트릭 배수마다 보너스 +50 (7, 14, 21...)
+  // Bonus +50 every 7-day streak milestone
   const streakBonus = newStreak > 0 && newStreak % 7 === 0 ? 50 : 0
   const totalCoinsEarned = coinsEarned + streakBonus
   const newCoins = (cat?.coins ?? 0) + totalCoinsEarned
+
+  // Intimacy: +5 per journal entry, capped at 100
+  const newIntimacy = Math.min((cat?.intimacy ?? 0) + 5, 100)
 
   const [entry, updatedCat] = await prisma.$transaction(async (tx) => {
     const e = await tx.journalEntry.create({
@@ -93,6 +96,7 @@ export async function POST(req) {
         stage: newStage,
         lastFedAt: new Date(),
         coins: newCoins,
+        intimacy: newIntimacy,
       },
     })
     return [e, c]
