@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeowMind — Interactive Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #fdf6ec 0%, #fce8f3 50%, #ede8fd 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 24px 16px 48px;
+  }
+
+  /* ── Brand header ── */
+  .brand {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .brand h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #f4a261, #e76f51, #9b59b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+  }
+  .brand p {
+    color: #9a8fa8;
+    font-size: 0.9rem;
+    margin-top: 4px;
+  }
+
+  /* ── Phone frame ── */
+  .phone {
+    width: 375px;
+    max-width: 100%;
+    background: #fffaf5;
+    border-radius: 44px;
+    box-shadow:
+      0 0 0 8px #e8ddd0,
+      0 0 0 10px #d4c8bc,
+      0 30px 80px rgba(0,0,0,0.18);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* notch */
+  .phone::before {
+    content: '';
+    display: block;
+    width: 120px;
+    height: 28px;
+    background: #1a1a1a;
+    border-radius: 0 0 18px 18px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+  }
+
+  .screen {
+    padding: 0 20px 28px;
+    min-height: 720px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0 10px;
+  }
+  .cat-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #4a3f5c;
+  }
+  .streak-badge {
+    background: linear-gradient(135deg, #f4a261, #e76f51);
+    color: white;
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /* ── Stats row ── */
+  .stats-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .stat-chip {
+    flex: 1;
+    background: white;
+    border-radius: 14px;
+    padding: 8px 10px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .stat-chip .val {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #4a3f5c;
+  }
+  .stat-chip .lbl {
+    font-size: 0.65rem;
+    color: #9a8fa8;
+    margin-top: 1px;
+  }
+
+  /* ── Cat stage ── */
+  .cat-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    margin: 4px 0 8px;
+  }
+
+  .cat-wrap {
+    position: relative;
+    display: inline-block;
+  }
+
+  .cat-svg {
+    width: 140px;
+    height: 140px;
+    transition: transform 0.1s;
+  }
+
+  .cat-svg.eat {
+    animation: eatBounce 0.4s ease-in-out 4;
+  }
+  .cat-svg.happy {
+    animation: happyWiggle 0.5s ease-in-out 2;
+  }
+
+  @keyframes eatBounce {
+    0%,100% { transform: translateY(0) scale(1); }
+    25%      { transform: translateY(-8px) scale(1.05); }
+    75%      { transform: translateY(4px) scale(0.97); }
+  }
+  @keyframes happyWiggle {
+    0%,100% { transform: rotate(0deg); }
+    25%     { transform: rotate(-6deg); }
+    75%     { transform: rotate(6deg); }
+  }
+
+  /* speech bubble */
+  .speech-bubble {
+    position: absolute;
+    top: -38px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border: 2px solid #f4a261;
+    border-radius: 18px;
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #e76f51;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(244,162,97,0.2);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #f4a261;
+  }
+  .speech-bubble.show { opacity: 1; }
+
+  /* ── Coin panel ── */
+  .coin-panel {
+    background: white;
+    border-radius: 18px;
+    padding: 12px 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    margin-bottom: 12px;
+  }
+  .coin-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .coin-display {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #4a3f5c;
+  }
+  .coin-display .icon { font-size: 1.2rem; }
+  .food-display {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6c5fa8;
+  }
+
+  .shop-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .shop-btn {
+    flex: 1;
+    border: none;
+    border-radius: 12px;
+    padding: 8px 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1.3;
+  }
+  .shop-btn.affordable {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #92400e;
+    box-shadow: 0 2px 6px rgba(253,200,60,0.25);
+  }
+  .shop-btn.affordable:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(253,200,60,0.35); }
+  .shop-btn.affordable:active { transform: translateY(0); }
+  .shop-btn.unaffordable {
+    background: #f1f1f1;
+    color: #aaa;
+    cursor: not-allowed;
+  }
+
+  .feed-btn {
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 10px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .feed-btn.available {
+    background: linear-gradient(135deg, #86efac, #4ade80);
+    color: #14532d;
+    box-shadow: 0 3px 10px rgba(74,222,128,0.3);
+  }
+  .feed-btn.available:hover { transform: translateY(-1px); }
+  .feed-btn.empty {
+    background: #f1f1f1;
+    color: #bbb;
+    cursor: not-allowed;
+  }
+
+  /* ── Journal section ── */
+  .journal-section {
+    background: white;
+    border-radius: 18px;
+    padding: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    margin-bottom: 12px;
+  }
+  .journal-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #9a8fa8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  .sentence-input {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: flex-start;
+  }
+  .sentence-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c4b5fd, #a78bfa);
+    color: white;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 8px;
+  }
+  .sentence-input textarea {
+    flex: 1;
+    border: 1.5px solid #e8e0f0;
+    border-radius: 12px;
+    padding: 8px 10px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    color: #4a3f5c;
+    resize: none;
+    height: 52px;
+    outline: none;
+    transition: border-color 0.2s;
+    background: #fafafa;
+  }
+  .sentence-input textarea:focus { border-color: #a78bfa; background: white; }
+  .sentence-input textarea.filled { border-color: #86efac; background: #f0fdf4; }
+
+  .submit-btn {
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: linear-gradient(135deg, #c4b5fd, #8b5cf6);
+    color: white;
+    box-shadow: 0 4px 14px rgba(139,92,246,0.35);
+    margin-top: 4px;
+  }
+  .submit-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(139,92,246,0.45); }
+  .submit-btn:disabled { background: #e0dce8; color: #aaa; box-shadow: none; cursor: not-allowed; transform: none; }
+
+  /* ── Coin toast ── */
+  .coin-toast {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 2px solid #f59e0b;
+    border-radius: 20px;
+    padding: 8px 18px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #92400e;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(245,158,11,0.3);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .coin-toast.show {
+    animation: toastPop 2.8s forwards;
+  }
+  @keyframes toastPop {
+    0%   { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.9); }
+    15%  { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    75%  { opacity: 1; transform: translateX(-50%) translateY(-8px) scale(1); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.95); }
+  }
+
+  /* ── History ── */
+  .history-section {
+    background: white;
+    border-radius: 18px;
+    padding: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+  }
+  .history-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #9a8fa8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  .history-entry {
+    border-left: 3px solid #c4b5fd;
+    padding-left: 10px;
+    margin-bottom: 10px;
+    font-size: 0.78rem;
+    color: #6b5f80;
+    line-height: 1.5;
+  }
+  .history-entry .date {
+    font-size: 0.68rem;
+    color: #b0a4c0;
+    margin-bottom: 2px;
+  }
+  .history-entry .coins-earned {
+    font-size: 0.7rem;
+    color: #d97706;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  /* ── Feature callouts (outside phone) ── */
+  .features {
+    width: 375px;
+    max-width: 100%;
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .feature-card {
+    background: white;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  }
+  .feature-card .icon { font-size: 1.4rem; margin-bottom: 6px; }
+  .feature-card h3 { font-size: 0.82rem; font-weight: 700; color: #4a3f5c; margin-bottom: 3px; }
+  .feature-card p  { font-size: 0.72rem; color: #9a8fa8; line-height: 1.4; }
+
+  /* ── "Try it" label ── */
+  .try-label {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #b0a4c0;
+    margin: 10px 0 4px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="brand">
+  <h1>🐱 MeowMind</h1>
+  <p>매일 세 문장 — 고양이가 기다려요</p>
+</div>
+
+<!-- ════════════════════ PHONE ════════════════════ -->
+<div class="phone">
+  <div class="screen">
+
+    <!-- Coin toast overlay -->
+    <div class="coin-toast" id="coinToast"></div>
+
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="cat-name" id="catNameDisplay">모찌 🐾</div>
+      <div class="streak-badge" id="streakBadge">🔥 3일 연속</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-chip">
+        <div class="val" id="statDays">3</div>
+        <div class="lbl">작성일</div>
+      </div>
+      <div class="stat-chip">
+        <div class="val" id="statStreak">3</div>
+        <div class="lbl">연속일</div>
+      </div>
+      <div class="stat-chip">
+        <div class="val" id="statCoins">100</div>
+        <div class="lbl">🪙 코인</div>
+      </div>
+    </div>
+
+    <!-- Cat -->
+    <div class="cat-stage">
+      <div class="cat-wrap">
+        <div class="speech-bubble" id="speechBubble">안녕! 오늘도 잘 부탁해~ 🐾</div>
+        <div class="cat-svg" id="catSvg"><!-- injected by JS --></div>
+      </div>
+    </div>
+
+    <!-- Coin panel -->
+    <div class="coin-panel">
+      <div class="coin-row">
+        <div class="coin-display">
+          <span class="icon">🪙</span>
+          <span id="coinCount">100</span> 코인
+        </div>
+        <div class="food-display">
+          🍱 음식 <strong id="foodCount">0</strong>개
+        </div>
+      </div>
+      <div class="shop-row">
+        <button class="shop-btn" id="buySnack" onclick="buyItem('snack')">
+          고양이 간식 🐟<br>
+          <span style="color:#b45309">30🪙 → 1개</span>
+        </button>
+        <button class="shop-btn" id="buyMeal" onclick="buyItem('meal')">
+          고양이 밥 🍱<br>
+          <span style="color:#b45309">80🪙 → 3개</span>
+        </button>
+      </div>
+      <button class="feed-btn" id="feedBtn" onclick="feedCat()">밥 주기 🍽️</button>
+    </div>
+
+    <!-- Journal -->
+    <div class="journal-section">
+      <div class="journal-title">✏️ 오늘의 세 문장</div>
+      <div class="sentence-input">
+        <div class="sentence-num">1</div>
+        <textarea id="s1" placeholder="오늘 있었던 일을 써봐요..." oninput="onInput()"></textarea>
+      </div>
+      <div class="sentence-input">
+        <div class="sentence-num">2</div>
+        <textarea id="s2" placeholder="느낀 점이나 생각도 좋아요..." oninput="onInput()"></textarea>
+      </div>
+      <div class="sentence-input">
+        <div class="sentence-num">3</div>
+        <textarea id="s3" placeholder="내일의 나에게 한 마디..." oninput="onInput()"></textarea>
+      </div>
+      <button class="submit-btn" id="submitBtn" onclick="submitJournal()" disabled>
+        일기 저장 +30🪙
+      </button>
+    </div>
+
+    <!-- History -->
+    <div class="history-section">
+      <div class="history-title">📖 최근 기록</div>
+      <div class="history-entry">
+        <div class="date">2026.05.24</div>
+        오늘은 산책을 했다. 바람이 시원해서 기분이 좋았다. 내일도 걸어야지.
+        <div class="coins-earned">+30🪙 획득</div>
+      </div>
+      <div class="history-entry">
+        <div class="date">2026.05.23</div>
+        새로운 카페를 발견했다. 라떼가 정말 맛있었다. 다음에 또 가고 싶다.
+        <div class="coins-earned">+30🪙 획득</div>
+      </div>
+      <div id="historyContainer"></div>
+    </div>
+
+  </div><!-- /screen -->
+</div><!-- /phone -->
+
+<p class="try-label">👆 직접 일기를 쓰고 고양이에게 밥을 줘보세요!</p>
+
+<!-- Feature cards -->
+<div class="features">
+  <div class="feature-card">
+    <div class="icon">✍️</div>
+    <h3>세 문장 일기</h3>
+    <p>부담 없이 매일 세 문장만. 글쓰기 습관을 자연스럽게.</p>
+  </div>
+  <div class="feature-card">
+    <div class="icon">🪙</div>
+    <h3>코인 시스템</h3>
+    <p>문장 하나당 10코인. 7일 연속 보너스 +50코인!</p>
+  </div>
+  <div class="feature-card">
+    <div class="icon">🐱</div>
+    <h3>성장하는 고양이</h3>
+    <p>일기를 쓸수록 고양이가 커요. 6단계 성장!</p>
+  </div>
+  <div class="feature-card">
+    <div class="icon">🍱</div>
+    <h3>먹이 주기</h3>
+    <p>코인으로 음식을 사서 고양이에게 직접 밥을 줘보세요.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════ SVG DATA ═══════════════════ -->
+<script>
+const CAT_SVG = {
+  happy: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="140" height="140">
+  <rect width="200" height="200" fill="#FFF8F0" rx="0" opacity="0"/>
+  <polygon points="67,95.45 55.45,70.7 87.46,83.9" fill="#F4A261"/>
+  <polygon points="70.3,92.15 61.06,75.65 83.5,85.55" fill="#FDDCB5"/>
+  <polygon points="133,95.45 144.55,70.7 112.54,83.9" fill="#F4A261"/>
+  <polygon points="129.7,92.15 138.94,75.65 116.5,85.55" fill="#FDDCB5"/>
+  <circle cx="100" cy="123.5" r="33" fill="#F4A261"/>
+  <circle cx="100" cy="126.8" r="21.45" fill="#FDDCB5" opacity="0.4"/>
+  <path d="M83.5,117.56 Q87.46,112.94 91.42,117.56" stroke="#5B4FCF" stroke-width="2.97" fill="none" stroke-linecap="round"/>
+  <path d="M108.58,117.56 Q112.54,112.94 116.5,117.56" stroke="#5B4FCF" stroke-width="2.97" fill="none" stroke-linecap="round"/>
+  <ellipse cx="100" cy="129.44" rx="2.97" ry="2.31" fill="#F9A8D4"/>
+  <path d="M96.04,132.08 Q92.74,135.38 89.44,132.74" stroke="#E76F51" stroke-width="2.31" fill="none" stroke-linecap="round"/>
+  <path d="M103.96,132.08 Q107.26,135.38 110.56,132.74" stroke="#E76F51" stroke-width="2.31" fill="none" stroke-linecap="round"/>
+  <line x1="95.05" y1="130.1" x2="75.25" y2="127.46" stroke="#E76F51" stroke-width="1.32" stroke-linecap="round" opacity="0.6"/>
+  <line x1="95.05" y1="131.75" x2="75.25" y2="133.4" stroke="#E76F51" stroke-width="1.32" stroke-linecap="round" opacity="0.6"/>
+  <line x1="104.95" y1="130.1" x2="124.75" y2="127.46" stroke="#E76F51" stroke-width="1.32" stroke-linecap="round" opacity="0.6"/>
+  <line x1="104.95" y1="131.75" x2="124.75" y2="133.4" stroke="#E76F51" stroke-width="1.32" stroke-linecap="round" opacity="0.6"/>
+</svg>`,
+
+  neutral: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="140" height="140">
+  <rect width="200" height="200" fill="#FFF8F0" rx="0" opacity="0"/>
+  <polygon points="67,95.45 55.45,70.7 87.46,83.9" fill="#F4A261"/>
+  <polygon points="70.3,92.15 61.06,75.65 83.5,85.55" fill="#FDDCB5"/>
+  <polygon points="133,95.45 144.55,70.7 112.54,83.9" fill="#F4A261"/>
+  <polygon points="129.7,92.15 138.94,75.65 116.5,85.55" fill="#FDDCB5"/>
+  <circle cx="100" cy="123.5" r="33" fill="#F4A261"/>
+  <circle cx="100" cy="126.8" r="21.45" fill="#FDDCB5" opacity="0.4"/>
+  <ellipse cx="87.46" cy="118.55" rx="4.29" ry="5.28" fill="#5B4FCF"/>
+  <ellipse cx="112.54" cy="118.55" rx="4.29" ry="5.28" fill="#5B4FCF"/>
+  <ellipse cx="100" cy="129.44" rx="2.97" ry="2.31" fill="#F9A8D4"/>
+  <path d="M96.04,132.08 Q92.74,135.38 89.44,132.74" stroke="#E76F51" stroke-width="2.31" fill="none" stroke-linecap="round"/>
+  <path d="M103.96,132.08 Q107.26,135.38 110.56,132.74" stroke="#E76F51" stroke-width="2.31" fill="none" stroke-linecap="round"/>
+  <line x1="95.05" y1="130.1" x2="75.25" y2="127.46" stroke="#E76F51" stroke-width="1.32" stroke-linecap="round" opacity="0.6"/>
+  <line x1="95.05" y1="131.75" x2="75.25" y2="133.4" stroke="#E76F51" stroke-width="1.32" stroke-linecap="round" opacity="0.6"/>
+  <line x1="104.95" y1="130.1" x2="124.75" y2="127.46" stroke="#E76F51" stroke-width="1.32" stroke-linecap="round" opacity="0.6"/>
+  <line x1="104.95" y1="131.75" x2="124.75" y2="133.4" stroke="#E76F51" stroke-width="1.32" stroke-linecap="round" opacity="0.6"/>
+</svg>`,
+
+  hungry: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="140" height="140">
+  <rect width="200" height="200" fill="#FFF8F0" rx="0" opacity="0"/>
+  <polygon points="67,95.45 55.45,70.7 87.46,83.9" fill="#F4A261"/>
+  <polygon points="70.3,92.15 61.06,75.65 83.5,85.55" fill="#FDDCB5"/>
+  <polygon points="133,95.45 144.55,70.7 112.54,83.9" fill="#F4A261"/>
+  <polygon points="129.7,92.15 138.94,75.65 116.5,85.55" fill="#FDDCB5"/>
+  <circle cx="100" cy="123.5" r="33" fill="#F4A261"/>
+  <circle cx="100" cy="126.8" r="21.45" fill="#FDDCB5" opacity="0.4"/>
+  <line x1="83.5" y1="118.55" x2="91.42" y2="118.55" stroke="#5B4FCF" stroke-width="2.97" stroke-linecap="round"/>
+  <line x1="108.58" y1="118.55" x2="116.5" y2="118.55" stroke="#5B4FCF" stroke-width="2.97" stroke-linecap="round"/>
+  <ellipse cx="100" cy="129.44" rx="2.97" ry="2.31" fill="#F9A8D4"/>
+  <path d="M96.04,132.08 Q92.74,135.38 89.44,132.74" stroke="#E76F51" stroke-width="2.31" fill="none" stroke-linecap="round"/>
+  <path d="M103.96,132.08 Q107.26,135.38 110.56,132.74" stroke="#E76F51" stroke-width="2.31" fill="none" stroke-linecap="round"/>
+  <line x1="95.05" y1="130.1" x2="75.25" y2="127.46" stroke="#E76F51" stroke-width="1.32" stroke-linecap="round" opacity="0.6"/>
+  <line x1="95.05" y1="131.75" x2="75.25" y2="133.4" stroke="#E76F51" stroke-width="1.32" stroke-linecap="round" opacity="0.6"/>
+  <line x1="104.95" y1="130.1" x2="124.75" y2="127.46" stroke="#E76F51" stroke-width="1.32" stroke-linecap="round" opacity="0.6"/>
+  <line x1="104.95" y1="131.75" x2="124.75" y2="133.4" stroke="#E76F51" stroke-width="1.32" stroke-linecap="round" opacity="0.6"/>
+</svg>`
+};
+
+// ═══ State ═══
+const state = {
+  coins: 100,
+  food: 0,
+  streak: 3,
+  days: 3,
+  submitted: false,
+};
+
+// ═══ Init ═══
+function init() {
+  setCat('neutral');
+  updateShopUI();
+}
+
+function setCat(mood) {
+  document.getElementById('catSvg').innerHTML = CAT_SVG[mood];
+}
+
+function updateShopUI() {
+  const { coins, food } = state;
+  document.getElementById('coinCount').textContent = coins;
+  document.getElementById('foodCount').textContent = food;
+  document.getElementById('statCoins').textContent = coins;
+
+  document.getElementById('buySnack').className =
+    'shop-btn ' + (coins >= 30 ? 'affordable' : 'unaffordable');
+  document.getElementById('buyMeal').className =
+    'shop-btn ' + (coins >= 80 ? 'affordable' : 'unaffordable');
+
+  document.getElementById('feedBtn').className =
+    'feed-btn ' + (food > 0 ? 'available' : 'empty');
+}
+
+// ═══ Journal input ═══
+function onInput() {
+  const s1 = document.getElementById('s1').value.trim();
+  const s2 = document.getElementById('s2').value.trim();
+  const s3 = document.getElementById('s3').value.trim();
+  ['s1','s2','s3'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.toggle('filled', el.value.trim().length > 0);
+  });
+  const count = [s1,s2,s3].filter(Boolean).length;
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = count < 3 || state.submitted;
+  btn.textContent = state.submitted ? '오늘 이미 작성했어요 ✅' : `일기 저장 +${count * 10}🪙`;
+}
+
+// ═══ Submit journal ═══
+function submitJournal() {
+  if (state.submitted) return;
+  const s1 = document.getElementById('s1').value.trim();
+  const s2 = document.getElementById('s2').value.trim();
+  const s3 = document.getElementById('s3').value.trim();
+  const count = [s1,s2,s3].filter(Boolean).length;
+  if (count < 3) return;
+
+  state.submitted = true;
+  state.coins += count * 10;
+  state.days += 1;
+  state.streak += 1;
+  const isStreakBonus = state.streak % 7 === 0;
+  if (isStreakBonus) state.coins += 50;
+
+  document.getElementById('statDays').textContent = state.days;
+  document.getElementById('statStreak').textContent = state.streak;
+  document.getElementById('streakBadge').textContent = `🔥 ${state.streak}일 연속`;
+
+  // Cat goes happy
+  setCat('happy');
+  const catEl = document.getElementById('catSvg');
+  catEl.classList.remove('eat'); void catEl.offsetWidth;
+  catEl.classList.add('happy');
+  setTimeout(() => catEl.classList.remove('happy'), 1200);
+
+  // Speech bubble
+  showSpeech('오늘도 고마워! 🐾✨');
+
+  // Coin toast
+  let toastMsg = `+${count * 10}🪙 코인 획득!`;
+  if (isStreakBonus) toastMsg += `\n🔥 ${state.streak}일 연속 +50 보너스!`;
+  showToast(toastMsg);
+
+  // Add history entry
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')}`;
+  const entryHtml = `<div class="history-entry">
+    <div class="date">${dateStr} <em style="color:#a78bfa">방금 작성</em></div>
+    ${[s1,s2,s3].join(' ')}
+    <div class="coins-earned">+${count * 10}🪙 획득${isStreakBonus ? ` + 🔥보너스 +50🪙` : ''}</div>
+  </div>`;
+  document.getElementById('historyContainer').insertAdjacentHTML('afterbegin', entryHtml);
+
+  updateShopUI();
+  onInput();
+
+  setTimeout(() => {
+    if (state.food === 0) {
+      setCat('hungry');
+      showSpeech('배고파... 밥 사줘 😿');
+    }
+  }, 3000);
+}
+
+// ═══ Buy item ═══
+function buyItem(id) {
+  if (id === 'snack' && state.coins >= 30) {
+    state.coins -= 30;
+    state.food += 1;
+  } else if (id === 'meal' && state.coins >= 80) {
+    state.coins -= 80;
+    state.food += 3;
+  } else {
+    showSpeech('코인이 부족해요 😢');
+    return;
+  }
+  updateShopUI();
+  showSpeech('냠냠 기대돼! 🎉');
+}
+
+// ═══ Feed cat ═══
+function feedCat() {
+  if (state.food <= 0) return;
+  state.food -= 1;
+  updateShopUI();
+
+  setCat('happy');
+  const catEl = document.getElementById('catSvg');
+  catEl.classList.remove('eat'); void catEl.offsetWidth;
+  catEl.classList.add('eat');
+  setTimeout(() => {
+    catEl.classList.remove('eat');
+    setCat(state.food > 0 ? 'happy' : 'neutral');
+  }, 1600);
+
+  showSpeech('냠냠~ 맛있어요! 🍽️');
+}
+
+// ═══ Helpers ═══
+let speechTimer = null;
+function showSpeech(text) {
+  const el = document.getElementById('speechBubble');
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(speechTimer);
+  speechTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+let toastTimer = null;
+function showToast(text) {
+  const el = document.getElementById('coinToast');
+  el.innerHTML = text.replace('\n', '<br>');
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2900);
+}
+
+// ═══ Start ═══
+init();
+</script>
+</body>
+</html>
