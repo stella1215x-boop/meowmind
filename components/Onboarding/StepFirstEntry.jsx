@@ -7,7 +7,7 @@ export default function StepFirstEntry({ onComplete, data }) {
   const [sentences, setSentences] = useState(['', '', ''])
   const [loading, setLoading] = useState(false)
 
-  const isValid = sentences.every((s) => s.trim().length >= 5)
+  const isValid = sentences.every((s) => s.trim().length >= 2)
 
   function updateSentence(i, value) {
     setSentences((prev) => {
@@ -59,8 +59,8 @@ export default function StepFirstEntry({ onComplete, data }) {
               rows={2}
               className="w-full border border-gray-200 rounded-2xl py-3 px-4 text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-lavender bg-white text-sm resize-none"
             />
-            <p className={`text-right text-xs ${sentences[i].trim().length >= 5 ? 'text-mint-dark' : 'text-gray-300'}`}>
-              {sentences[i].trim().length >= 5 ? '✓' : `${sentences[i].length}자 (최소 5자)`}
+            <p className={`text-right text-xs ${sentences[i].trim().length >= 2 ? 'text-mint-dark' : 'text-gray-300'}`}>
+              {sentences[i].trim().length >= 2 ? '✓' : `${sentences[i].length}자 (최소 2자)`}
             </p>
           </div>
         ))}
@@ -69,7 +69,7 @@ export default function StepFirstEntry({ onComplete, data }) {
       <button
         onClick={handleComplete}
         disabled={!isValid || loading}
-        className="w-full bg-lavender text-white rounded-2xl py-4 text-lg font-bold hover:opacity-90 active:scale-95 transition-all disabled:opacity-40"
+        className="w-full bg-lavender text-white rounded-2xl py-4 text-lg font-bold hover:opacity-90 active:scale-92 transition-all disabled:opacity-40"
       >
         {loading ? '저장 중...' : `${data.catName || '고양이'}와 함께 시작하기 🐱`}
       </button>

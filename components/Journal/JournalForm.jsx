@@ -16,7 +16,7 @@ export default function JournalForm({ prompt, onSubmit }) {
   const [shake, setShake] = useState(false)
   const textareaRefs = useRef([])
 
-  const validCount = sentences.filter((s) => s.trim().length >= 5).length
+  const validCount = sentences.filter((s) => s.trim().length >= 2).length
   const isValid = validCount === 3
 
   function updateSentence(i, value) {
@@ -58,7 +58,7 @@ export default function JournalForm({ prompt, onSubmit }) {
 
       <div className="space-y-3">
         {sentences.map((s, i) => {
-          const done = s.trim().length >= 5
+          const done = s.trim().length >= 2
           const { label, placeholder } = FIELD_CONFIG[i]
           return (
             <div
@@ -110,7 +110,7 @@ export default function JournalForm({ prompt, onSubmit }) {
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                sentences[i].trim().length >= 5
+                sentences[i].trim().length >= 2
                   ? 'bg-mint w-8'
                   : 'bg-gray-200 w-4'
               }`}

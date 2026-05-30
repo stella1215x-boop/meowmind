@@ -73,7 +73,7 @@ export async function POST(req) {
 
   // 코인 계산: 문장 당 10코인 (3문장 = 30코인)
   const COINS_PER_SENTENCE = 10
-  const validCount = sentences.filter(s => s.trim().length >= 5).length
+  const validCount = sentences.filter(s => s.trim().length >= 2).length
   const coinsEarned = validCount * COINS_PER_SENTENCE
   // 7일 스트릭 배수마다 보너스 +50 (7, 14, 21...)
   const streakBonus = newStreak > 0 && newStreak % 7 === 0 ? 50 : 0
