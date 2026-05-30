@@ -334,6 +334,7 @@ body {
         <textarea id="feelingsInput" placeholder="예: 오늘도 예쁘다 모찌야~ 사랑해!"></textarea>
         <button class="feelings-send-btn" onclick="sendFeelings()">전송 💌</button>
       </div>
+      <div id="feelingsResult" style="display:none;margin-top:8px;border-radius:14px;padding:10px 14px;font-size:0.82rem;font-weight:600;text-align:center;"></div>
       <div class="bonus-hint">😊 긍정 → 보너스 +10~20🪙 &nbsp;|&nbsp; 😢 부정 → 코인 없음</div>
     </div>
 
@@ -528,13 +529,25 @@ function scoreText(text) {
 
 function sendFeelings() {
   const el  = document.getElementById('feelingsInput');
+  const btn = document.querySelector('.feelings-send-btn');
+  const res = document.getElementById('feelingsResult');
   const txt = el.value.trim();
-  if (!txt) return;
+  if (!txt) {
+    res.style.display = 'block';
+    res.style.background = '#fef3c7';
+    res.style.color = '#92400e';
+    res.textContent = '✏️ 먼저 한마디를 써주세요!';
+    setTimeout(()=>{ res.style.display='none'; }, 2000);
+    return;
+  }
 
   const { pos, neg } = scoreText(txt);
 
+  // Button feedback
+  btn.style.opacity = '0.6';
+  setTimeout(()=>btn.style.opacity='1', 400);
+
   if (neg > 0) {
-    // Bad message
     setCat('sad');
     animateCat('sick');
     const bubble = document.getElementById('speechBubble');
@@ -542,6 +555,13 @@ function sendFeelings() {
     showSpeech('속상해요... 😢');
     setTimeout(()=>bubble.classList.remove('sad'), 2600);
     addLog('😢','모찌가 상처받았어요','코인 없음','bad');
+
+    res.style.display = 'block';
+    res.style.background = '#fee2e2';
+    res.style.color = '#991b1b';
+    res.innerHTML = '😢 모찌가 속상해했어요...<br><small style="font-weight:400">부정적인 말에는 코인이 없어요</small>';
+    setTimeout(()=>{ res.style.display='none'; setCat('neutral'); }, 3000);
+
   } else if (pos > 0) {
     const bonus = pos >= 3 ? 20 : 10;
     state.coins += bonus;
@@ -551,9 +571,22 @@ function sendFeelings() {
     showToast(`💌 모찌가 기뻐해요! +${bonus}🪙`);
     addLog('💌','모찌에게 따뜻한 한마디',`+${bonus}🪙`);
     updateUI();
+
+    res.style.display = 'block';
+    res.style.background = '#dcfce7';
+    res.style.color = '#166534';
+    res.innerHTML = `🥰 모찌가 기뻐해요! <strong>+${bonus}🪙</strong> 보너스 코인 획득!`;
+    setTimeout(()=>{ res.style.display='none'; }, 3000);
+
   } else {
     showSpeech('고마워~ 🐾');
     addLog('💬','모찌에게 메시지','');
+
+    res.style.display = 'block';
+    res.style.background = '#f3f4f6';
+    res.style.color = '#6b7280';
+    res.textContent = '💬 모찌가 메시지를 받았어요~';
+    setTimeout(()=>{ res.style.display='none'; }, 2500);
   }
 
   el.value = '';
