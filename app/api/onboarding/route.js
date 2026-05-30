@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { tagMood } from '@/lib/insightsService'
 
+const COINS_PER_SENTENCE = 10
+
 export async function POST(req) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -18,6 +20,13 @@ export async function POST(req) {
   const combinedText = sentences.join(' ')
   const mood = tagMood(combinedText)
 
+  // Coins: 10 per valid sentence (same rule as regular journal)
+  const validCount = sentences.filter((s) => s.trim().length >= 2).length
+  const coinsEarned = validCount * COINS_PER_SENTENCE
+
+  // Intimacy: +5 for first journal entry
+  const intimacyEarned = 5
+
   const [cat, entry] = await prisma.$transaction(async (tx) => {
     const newCat = await tx.cat.create({
       data: {
@@ -29,6 +38,8 @@ export async function POST(req) {
         currentStreak: 1,
         longestStreak: 1,
         lastFedAt: new Date(),
+        coins: coinsEarned,
+        intimacy: intimacyEarned,
       },
     })
 
@@ -58,5 +69,5 @@ export async function POST(req) {
     body: JSON.stringify({ userId, event: 'onboarding_completed' }),
   }).catch(() => {})
 
-  return NextResponse.json({ cat, entry }, { status: 201 })
+  return NextResponse.json({ cat, entry, coinsEarned }, { status: 201 })
 }
