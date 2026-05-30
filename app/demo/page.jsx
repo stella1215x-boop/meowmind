@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import CatCharacter from '@/components/Cat/CatCharacter'
+import CatSvg from '@/components/Cat/CatSvg'
 import IntimacyMeter from '@/components/Cat/IntimacyMeter'
 import { getStageLabel, INTIMACY_TIERS } from '@/lib/catGrowthService'
 
@@ -153,7 +154,7 @@ export default function DemoPage() {
               className={`bg-white rounded-2xl p-3 flex flex-col items-center gap-1 shadow-sm transition-all ${
                 stage === s ? 'ring-2 ring-lavender' : 'hover:shadow-md'
               }`}>
-              <CatCharacter cat={{ name: 'NAVI', color, stage: s, intimacy }} emotionalState="neutral" />
+              <CatSvg stage={s} color={color} mood="neutral" size={72} />
               <p className="text-xs text-gray-500 font-semibold">Stage {s}</p>
               <p className="text-[10px] text-gray-400">{getStageLabel(s)}</p>
             </button>

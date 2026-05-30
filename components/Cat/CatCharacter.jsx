@@ -1,7 +1,7 @@
 'use client'
 
-import Image from 'next/image'
 import { useState, useEffect, useCallback } from 'react'
+import CatSvg from './CatSvg'
 import { getIntimacyTier, getSvgMood } from '@/lib/catGrowthService'
 
 // Display size per stage (px) — cat grows visually
@@ -58,7 +58,6 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
   const intimacy = cat?.intimacy ?? 0
   const tier     = getIntimacyTier(intimacy)
   const svgMood  = getSvgMood(emotionalState, intimacy)
-  const svgSrc   = `/cats/cat_stage${stage}_${color}_${svgMood}.svg`
 
   // First-appear greeting animation
   useEffect(() => {
@@ -145,22 +144,17 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
         </span>
       ))}
 
-      {/* Cat image with CSS animations */}
+      {/* Animated inline SVG cat */}
       <div
         className={animClass}
-        style={{
-          filter: `drop-shadow(${tier.glow})`,
-          width: size,
-          height: size,
-        }}
+        style={{ filter: `drop-shadow(${tier.glow})`, width: size, height: size }}
       >
-        <Image
-          src={svgSrc}
-          alt={cat?.name ?? 'Cat'}
-          width={size}
-          height={size}
-          className="object-contain select-none"
-          priority
+        <CatSvg
+          stage={stage}
+          color={color}
+          mood={svgMood}
+          size={size}
+          className="select-none"
         />
       </div>
 

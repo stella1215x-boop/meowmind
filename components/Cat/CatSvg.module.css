@@ -1,0 +1,117 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   CatSvg — per-part ambient animations
+   All transform-origin values are computed from fill-box percentages
+   that stay constant regardless of stage scale factor.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Tail wag
+   fill-box: x=[tailRootX, ~curveMaxX], y=[curveTopY, tailRootY]
+   (0% 100%) = (x_min, y_max) = tail-root M-point ✓                        */
+.tailGroup {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: tailWag 2s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Left ear twitch
+   fill-box spans both ear polygons.
+   Ear root P1 sits at 36% from left, 100% from top (constant for all scales) */
+.earLeftGroup {
+  transform-box: fill-box;
+  transform-origin: 36% 100%;
+  animation: earTwitchL 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Right ear twitch — mirror, staggered 1.5 s */
+.earRightGroup {
+  transform-box: fill-box;
+  transform-origin: 64% 100%;
+  animation: earTwitchR 7s ease-in-out infinite 1.5s;
+  will-change: transform;
+}
+
+/* Body breathe — subtle scaleY from bottom-center of head circle */
+.bodyGroup {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: bodyBreathe 3.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Eye blink — left (blinks slightly before right for realism) */
+.eyeLeftGroup {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: eyeBlink 5s ease-in-out infinite 0.8s;
+  will-change: transform;
+}
+
+/* Eye blink — right */
+.eyeRightGroup {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: eyeBlink 5s ease-in-out infinite 0.92s;
+  will-change: transform;
+}
+
+/* Whiskers — very subtle twitch, split left / right */
+.whiskerLeft {
+  transform-box: fill-box;
+  transform-origin: 100% 50%;  /* pivot at whisker roots (right edge = face side) */
+  animation: whiskerL 9s ease-in-out infinite 2s;
+}
+.whiskerRight {
+  transform-box: fill-box;
+  transform-origin: 0% 50%;
+  animation: whiskerR 9s ease-in-out infinite 2.8s;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Keyframes
+   ───────────────────────────────────────────────────────────────────────── */
+
+@keyframes tailWag {
+  0%, 100% { transform: rotate(-13deg); }
+  50%       { transform: rotate(15deg);  }
+}
+
+@keyframes earTwitchL {
+  0%, 68%, 100% { transform: rotate(0deg);   }
+  72%           { transform: rotate(-11deg); }
+  79%           { transform: rotate(4deg);   }
+  85%           { transform: rotate(-6deg);  }
+  92%           { transform: rotate(2deg);   }
+}
+
+@keyframes earTwitchR {
+  0%, 68%, 100% { transform: rotate(0deg);   }
+  72%           { transform: rotate(11deg);  }
+  79%           { transform: rotate(-4deg);  }
+  85%           { transform: rotate(6deg);   }
+  92%           { transform: rotate(-2deg);  }
+}
+
+@keyframes bodyBreathe {
+  0%, 100% { transform: scaleY(1)     scaleX(1);     }
+  50%       { transform: scaleY(1.02) scaleX(0.994); }
+}
+
+@keyframes eyeBlink {
+  0%, 86%, 100% { transform: scaleY(1);    }
+  90%           { transform: scaleY(0.07); }
+  93%           { transform: scaleY(1);    }
+}
+
+@keyframes whiskerL {
+  0%, 89%, 100% { transform: rotate(0deg);  }
+  91%           { transform: rotate(-3deg); }
+  95%           { transform: rotate(2deg);  }
+}
+
+@keyframes whiskerR {
+  0%, 89%, 100% { transform: rotate(0deg); }
+  91%           { transform: rotate(3deg); }
+  95%           { transform: rotate(-2deg);}
+}
