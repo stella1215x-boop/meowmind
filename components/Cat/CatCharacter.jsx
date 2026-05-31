@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import CatSvg from './CatSvg'
 import { getIntimacyTier, getSvgMood } from '@/lib/catGrowthService'
 
-// Display size per stage (px) — cat grows visually
+// ── Display size per stage ────────────────────────────────────────────────
 const DISPLAY_SIZE = [90, 108, 128, 150, 168, 188]
 
-// Full speech map (English)
+// ── Speech map ────────────────────────────────────────────────────────────
 const ANIM_SPEECH = {
   purr:     'Purrrr~ 😻',
   wag:      'My tail is excited! 🐾',
@@ -21,7 +21,19 @@ const ANIM_SPEECH = {
   float:    'So happy~ ✨',
 }
 
-// CSS animation class for each tap/event animation
+// ── PNG frame sequences ───────────────────────────────────────────────────
+//   frames : filenames in /public/cat/{color}/ (no extension)
+//   fps    : frames per second
+//   Each sequence plays once then returns to idle SVG.
+const FRAME_SEQUENCES = {
+  eat:      { frames: ['eat_1', 'eat_2', 'eat_3', 'eat_4'],              fps: 3 },
+  purr:     { frames: ['purr_1', 'purr_2', 'purr_3'],                    fps: 3 },
+  headbutt: { frames: ['headbutt_1', 'headbutt_2', 'headbutt_3'],        fps: 5 },
+  nuzzle:   { frames: ['nuzzle_2', 'nuzzle_2'],                          fps: 2 },
+  knead:    { frames: ['knead_1', 'knead_2', 'knead_3', 'knead_2'],      fps: 3 },
+}
+
+// ── CSS-only animations (no PNG frames) ──────────────────────────────────
 const TAP_ANIM_CLASS = {
   purr:     'animate-purr',
   wag:      'animate-wag',
@@ -46,11 +58,14 @@ function getIdleAnimClass(tier, emotionalState, hasGreeted) {
 }
 
 export default function CatCharacter({ cat, emotionalState = 'neutral', playAnimation, onAnimationEnd }) {
-  const [currentAnim, setCurrentAnim]   = useState(null)
-  const [bubble,      setBubble]        = useState(false)
-  const [bubbleText,  setBubbleText]    = useState('')
-  const [hasGreeted,  setHasGreeted]    = useState(false)
-  const [hearts,      setHearts]        = useState([])
+  const [currentAnim,  setCurrentAnim]  = useState(null)
+  const [frameIndex,   setFrameIndex]   = useState(0)
+  const [imgError,     setImgError]     = useState(false)   // fallback if PNG missing
+  const [bubble,       setBubble]       = useState(false)
+  const [bubbleText,   setBubbleText]   = useState('')
+  const [hasGreeted,   setHasGreeted]   = useState(false)
+  const [hearts,       setHearts]       = useState([])
+  const timerRef = useRef(null)
 
   const stage    = Math.min(cat?.stage ?? 0, 5)
   const size     = DISPLAY_SIZE[stage]
@@ -59,13 +74,13 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
   const tier     = getIntimacyTier(intimacy)
   const svgMood  = getSvgMood(emotionalState, intimacy)
 
-  // First-appear greeting animation
+  // First-appear greeting
   useEffect(() => {
     const t = setTimeout(() => setHasGreeted(true), 1900)
     return () => clearTimeout(t)
   }, [])
 
-  // Spawn floating hearts (called for high-intimacy interactions)
+  // Floating hearts for high-intimacy interactions
   const spawnHearts = useCallback(() => {
     const batch = Array.from({ length: 4 }, (_, i) => ({
       id: Date.now() + i,
@@ -76,15 +91,20 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
     setTimeout(() => setHearts((prev) => prev.filter((h) => !batch.some((b) => b.id === h.id))), 1600)
   }, [])
 
-  // Play externally-triggered animation (journal submit, feed, etc.)
+  // ── Triggered animation ─────────────────────────────────────────────────
   useEffect(() => {
     if (!playAnimation) return
+
+    // Clear any running timer
+    if (timerRef.current) clearInterval(timerRef.current)
+
     setCurrentAnim(playAnimation)
+    setFrameIndex(0)
+    setImgError(false)
 
     // Speech bubble
     const speech = ANIM_SPEECH[playAnimation]
     if (speech) {
-      // High-intimacy: use personalised tier speech sometimes
       const tierSpeech = tier.speech
       const finalSpeech =
         intimacy >= 60 && Math.random() < 0.4
@@ -94,15 +114,51 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
       setBubble(true)
     }
 
-    // Hearts for attached+
     if (intimacy >= 60) spawnHearts()
 
+    const seq = FRAME_SEQUENCES[playAnimation]
+
+    if (seq) {
+      // ── PNG frame animation ──
+      const interval = Math.round(1000 / seq.fps)
+      let idx = 0
+
+      timerRef.current = setInterval(() => {
+        idx++
+        if (idx >= seq.frames.length) {
+          clearInterval(timerRef.current)
+          // Hold last frame briefly, then return to idle
+          setTimeout(() => {
+            setCurrentAnim(null)
+            onAnimationEnd?.()
+          }, interval)
+        } else {
+          setFrameIndex(idx)
+        }
+      }, interval)
+    } else {
+      // ── CSS-only fallback (wag, spin, roll, knock, float) ──
+      setTimeout(() => {
+        setCurrentAnim(null)
+        onAnimationEnd?.()
+      }, 2400)
+    }
+
     const tb = setTimeout(() => setBubble(false), 1900)
-    const te = setTimeout(() => { setCurrentAnim(null); onAnimationEnd?.() }, 2400)
-    return () => { clearTimeout(tb); clearTimeout(te) }
+
+    return () => {
+      clearTimeout(tb)
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
   }, [playAnimation]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const animClass = currentAnim
+  // ── Decide what to render ───────────────────────────────────────────────
+  const seq          = currentAnim ? FRAME_SEQUENCES[currentAnim] : null
+  const isFrameAnim  = !!seq && !imgError
+  const currentFrame = isFrameAnim ? seq.frames[frameIndex] : null
+  const imgSrc       = currentFrame ? `/cat/${color}/${currentFrame}.png` : null
+
+  const cssAnimClass = (currentAnim && !isFrameAnim)
     ? (TAP_ANIM_CLASS[currentAnim] ?? 'animate-float')
     : getIdleAnimClass(tier, emotionalState, hasGreeted)
 
@@ -144,18 +200,34 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
         </span>
       ))}
 
-      {/* Animated inline SVG cat */}
+      {/* ── Cat render ─────────────────────────────────────────────────────
+          • PNG frame   → when a frame sequence exists for the current action
+          • CatSvg      → idle, or CSS-only actions (wag/spin/roll/knock)
+          • Fallback    → if PNG 404s, imgError=true → drops back to CatSvg   */}
       <div
-        className={animClass}
+        className={isFrameAnim ? 'transition-none' : cssAnimClass}
         style={{ filter: `drop-shadow(${tier.glow})`, width: size, height: size }}
       >
-        <CatSvg
-          stage={stage}
-          color={color}
-          mood={svgMood}
-          size={size}
-          className="select-none"
-        />
+        {isFrameAnim && imgSrc ? (
+          <img
+            key={imgSrc}
+            src={imgSrc}
+            alt=""
+            width={size}
+            height={size}
+            draggable={false}
+            className="select-none object-contain w-full h-full"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <CatSvg
+            stage={stage}
+            color={color}
+            mood={svgMood}
+            size={size}
+            className="select-none"
+          />
+        )}
       </div>
 
       {/* Intimacy tier badge */}
