@@ -177,7 +177,7 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
     : (!hasGreeted ? 'animate-cat-greet' : '')
 
   return (
-    <div className="relative flex flex-col items-center" style={{ width: size, minHeight: size + 64 }}>
+    <div className="relative flex flex-col items-center" style={{ width: size, minHeight: size + 64, background: 'transparent' }}>
 
       {/* Stage crown / star deco */}
       {stage >= 5 && (
