@@ -22,18 +22,18 @@ const ANIM_SPEECH = {
 }
 
 // ── PNG frame sequences ───────────────────────────────────────────────────
-//   frames : filenames in /public/cat/{color}/ (no extension)
-//   fps    : frames per second
-//   Each sequence plays once then returns to idle SVG.
+//   Loaded from /public/cat/{color}/{frame}.png
+//   Falls back to /public/cat/orange/{frame}.png if color variant missing
 const FRAME_SEQUENCES = {
-  eat:      { frames: ['eat_1', 'eat_2', 'eat_3', 'eat_4'],              fps: 3 },
-  purr:     { frames: ['purr_1', 'purr_2', 'purr_3'],                    fps: 3 },
-  headbutt: { frames: ['headbutt_1', 'headbutt_2', 'headbutt_3'],        fps: 5 },
-  nuzzle:   { frames: ['nuzzle_2', 'nuzzle_2'],                          fps: 2 },
-  knead:    { frames: ['knead_1', 'knead_2', 'knead_3', 'knead_2'],      fps: 3 },
+  idle:     { frames: ['idle_1', 'idle_2'],                         fps: 1,  loop: true  },
+  eat:      { frames: ['eat_1', 'eat_2', 'eat_3', 'eat_4'],         fps: 3,  loop: false },
+  purr:     { frames: ['purr_1', 'purr_2', 'purr_3'],               fps: 3,  loop: false },
+  headbutt: { frames: ['headbutt_1', 'headbutt_2', 'headbutt_3'],   fps: 5,  loop: false },
+  nuzzle:   { frames: ['nuzzle_2', 'nuzzle_2'],                     fps: 2,  loop: false },
+  knead:    { frames: ['knead_1', 'knead_2', 'knead_3', 'knead_2'], fps: 3,  loop: false },
 }
 
-// ── CSS-only animations (no PNG frames) ──────────────────────────────────
+// ── CSS-only fallback for actions without PNG frames ──────────────────────
 const TAP_ANIM_CLASS = {
   purr:     'animate-purr',
   wag:      'animate-wag',
@@ -47,24 +47,23 @@ const TAP_ANIM_CLASS = {
   float:    'animate-float',
 }
 
-function getIdleAnimClass(tier, emotionalState, hasGreeted) {
-  if (!hasGreeted) return 'animate-cat-greet'
-  if (emotionalState === 'happy') {
-    if (tier.key === 'legendary' || tier.key === 'soulBond') return 'animate-excited'
-    if (tier.key === 'attached')  return 'animate-float'
-    return 'animate-purr'
-  }
-  return tier.idleAnim ?? 'animate-body-breathe'
+// Color fallback chain: try user color first, then orange
+function imgSrcFor(color, frame) {
+  return `/cat/${color}/${frame}.png`
+}
+function imgFallbackFor(frame) {
+  return `/cat/orange/${frame}.png`
 }
 
 export default function CatCharacter({ cat, emotionalState = 'neutral', playAnimation, onAnimationEnd }) {
-  const [currentAnim,  setCurrentAnim]  = useState(null)
-  const [frameIndex,   setFrameIndex]   = useState(0)
-  const [imgError,     setImgError]     = useState(false)   // fallback if PNG missing
-  const [bubble,       setBubble]       = useState(false)
-  const [bubbleText,   setBubbleText]   = useState('')
-  const [hasGreeted,   setHasGreeted]   = useState(false)
-  const [hearts,       setHearts]       = useState([])
+  const [currentAnim,    setCurrentAnim]    = useState('idle')
+  const [frameIndex,     setFrameIndex]     = useState(0)
+  const [useFallback,    setUseFallback]    = useState(false)  // true = use orange PNG
+  const [useSvg,         setUseSvg]         = useState(false)  // true = orange also failed
+  const [bubble,         setBubble]         = useState(false)
+  const [bubbleText,     setBubbleText]     = useState('')
+  const [hasGreeted,     setHasGreeted]     = useState(false)
+  const [hearts,         setHearts]         = useState([])
   const timerRef = useRef(null)
 
   const stage    = Math.min(cat?.stage ?? 0, 5)
@@ -74,13 +73,17 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
   const tier     = getIntimacyTier(intimacy)
   const svgMood  = getSvgMood(emotionalState, intimacy)
 
-  // First-appear greeting
+  // ── Start idle loop on mount ──────────────────────────────────────────
   useEffect(() => {
+    startAnim('idle')
     const t = setTimeout(() => setHasGreeted(true), 1900)
-    return () => clearTimeout(t)
-  }, [])
+    return () => {
+      clearTimeout(t)
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Floating hearts for high-intimacy interactions
+  // ── Floating hearts ───────────────────────────────────────────────────
   const spawnHearts = useCallback(() => {
     const batch = Array.from({ length: 4 }, (_, i) => ({
       id: Date.now() + i,
@@ -91,16 +94,51 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
     setTimeout(() => setHearts((prev) => prev.filter((h) => !batch.some((b) => b.id === h.id))), 1600)
   }, [])
 
-  // ── Triggered animation ─────────────────────────────────────────────────
-  useEffect(() => {
-    if (!playAnimation) return
-
-    // Clear any running timer
+  // ── Core animation runner ─────────────────────────────────────────────
+  function startAnim(name) {
     if (timerRef.current) clearInterval(timerRef.current)
 
-    setCurrentAnim(playAnimation)
+    const seq = FRAME_SEQUENCES[name]
+    if (!seq) {
+      // CSS-only action (wag, spin, roll, knock, float)
+      setCurrentAnim(name)
+      return
+    }
+
+    setCurrentAnim(name)
     setFrameIndex(0)
-    setImgError(false)
+    setUseFallback(false)
+    setUseSvg(false)
+
+    if (seq.loop) {
+      // Looping idle — cycle frames forever
+      let idx = 0
+      timerRef.current = setInterval(() => {
+        idx = (idx + 1) % seq.frames.length
+        setFrameIndex(idx)
+      }, Math.round(1000 / seq.fps))
+    } else {
+      // One-shot action — play once then return to idle
+      const interval = Math.round(1000 / seq.fps)
+      let idx = 0
+      timerRef.current = setInterval(() => {
+        idx++
+        if (idx >= seq.frames.length) {
+          clearInterval(timerRef.current)
+          setTimeout(() => {
+            onAnimationEnd?.()
+            startAnim('idle')
+          }, interval)
+        } else {
+          setFrameIndex(idx)
+        }
+      }, interval)
+    }
+  }
+
+  // ── Externally-triggered animation (feed, journal, tap) ───────────────
+  useEffect(() => {
+    if (!playAnimation) return
 
     // Speech bubble
     const speech = ANIM_SPEECH[playAnimation]
@@ -112,55 +150,28 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
           : speech
       setBubbleText(finalSpeech)
       setBubble(true)
+      setTimeout(() => setBubble(false), 1900)
     }
 
     if (intimacy >= 60) spawnHearts()
 
-    const seq = FRAME_SEQUENCES[playAnimation]
-
-    if (seq) {
-      // ── PNG frame animation ──
-      const interval = Math.round(1000 / seq.fps)
-      let idx = 0
-
-      timerRef.current = setInterval(() => {
-        idx++
-        if (idx >= seq.frames.length) {
-          clearInterval(timerRef.current)
-          // Hold last frame briefly, then return to idle
-          setTimeout(() => {
-            setCurrentAnim(null)
-            onAnimationEnd?.()
-          }, interval)
-        } else {
-          setFrameIndex(idx)
-        }
-      }, interval)
-    } else {
-      // ── CSS-only fallback (wag, spin, roll, knock, float) ──
-      setTimeout(() => {
-        setCurrentAnim(null)
-        onAnimationEnd?.()
-      }, 2400)
-    }
-
-    const tb = setTimeout(() => setBubble(false), 1900)
-
-    return () => {
-      clearTimeout(tb)
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
+    startAnim(playAnimation)
   }, [playAnimation]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Decide what to render ───────────────────────────────────────────────
-  const seq          = currentAnim ? FRAME_SEQUENCES[currentAnim] : null
-  const isFrameAnim  = !!seq && !imgError
-  const currentFrame = isFrameAnim ? seq.frames[frameIndex] : null
-  const imgSrc       = currentFrame ? `/cat/${color}/${currentFrame}.png` : null
+  // ── Decide what to render ─────────────────────────────────────────────
+  const seq         = FRAME_SEQUENCES[currentAnim]
+  const isPngAnim   = !!seq && !useSvg
+  const frameName   = isPngAnim ? seq.frames[frameIndex] : null
 
-  const cssAnimClass = (currentAnim && !isFrameAnim)
+  // Primary src = user's color; on error try orange; on second error → SVG
+  const primarySrc  = frameName ? imgSrcFor(color, frameName) : null
+  const fallbackSrc = frameName ? imgFallbackFor(frameName)   : null
+  const activeSrc   = isPngAnim ? (useFallback ? fallbackSrc : primarySrc) : null
+
+  // CSS anim class for non-PNG actions (wag/spin/roll/knock/float) and greet
+  const cssClass = !seq
     ? (TAP_ANIM_CLASS[currentAnim] ?? 'animate-float')
-    : getIdleAnimClass(tier, emotionalState, hasGreeted)
+    : (!hasGreeted ? 'animate-cat-greet' : '')
 
   return (
     <div className="relative flex flex-col items-center" style={{ width: size, minHeight: size + 64 }}>
@@ -201,23 +212,31 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
       ))}
 
       {/* ── Cat render ─────────────────────────────────────────────────────
-          • PNG frame   → when a frame sequence exists for the current action
-          • CatSvg      → idle, or CSS-only actions (wag/spin/roll/knock)
-          • Fallback    → if PNG 404s, imgError=true → drops back to CatSvg   */}
+          Priority: color PNG → orange PNG fallback → CatSvg fallback       */}
       <div
-        className={isFrameAnim ? 'transition-none' : cssAnimClass}
-        style={{ filter: `drop-shadow(${tier.glow})`, width: size, height: size }}
+        className={isPngAnim ? '' : cssClass}
+        style={{
+          filter: `drop-shadow(${tier.glow})`,
+          width: size,
+          height: size,
+        }}
       >
-        {isFrameAnim && imgSrc ? (
+        {isPngAnim && activeSrc ? (
           <img
-            key={imgSrc}
-            src={imgSrc}
+            key={activeSrc}
+            src={activeSrc}
             alt=""
             width={size}
             height={size}
             draggable={false}
             className="select-none object-contain w-full h-full"
-            onError={() => setImgError(true)}
+            onError={() => {
+              if (!useFallback) {
+                setUseFallback(true)   // try orange
+              } else {
+                setUseSvg(true)        // give up, use SVG
+              }
+            }}
           />
         ) : (
           <CatSvg
