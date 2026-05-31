@@ -50,19 +50,15 @@ const TAP_ANIM_CLASS = {
 // Cache-bust version — increment when sprites are updated
 const SPRITE_VERSION = 3
 
-// Color fallback chain: try user color first, then orange
-function imgSrcFor(color, frame) {
-  return `/cat/${color}/${frame}.png?v=${SPRITE_VERSION}`
-}
-function imgFallbackFor(frame) {
+// Only orange sprites exist for now — always load from orange/
+// When grey/white variants are added, update this to use `color`
+function imgSrcFor(_color, frame) {
   return `/cat/orange/${frame}.png?v=${SPRITE_VERSION}`
 }
 
 export default function CatCharacter({ cat, emotionalState = 'neutral', playAnimation, onAnimationEnd }) {
   const [currentAnim,    setCurrentAnim]    = useState('idle')
   const [frameIndex,     setFrameIndex]     = useState(0)
-  const [useFallback,    setUseFallback]    = useState(false)  // true = use orange PNG
-  const [useSvg,         setUseSvg]         = useState(false)  // true = orange also failed
   const [bubble,         setBubble]         = useState(false)
   const [bubbleText,     setBubbleText]     = useState('')
   const [hasGreeted,     setHasGreeted]     = useState(false)
@@ -117,8 +113,6 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
 
     setCurrentAnim(name)
     setFrameIndex(0)
-    setUseFallback(false)
-    setUseSvg(false)
 
     if (seq.loop) {
       // Looping idle — cycle frames forever
@@ -169,14 +163,10 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
   }, [playAnimation]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Decide what to render ─────────────────────────────────────────────
-  const seq         = FRAME_SEQUENCES[currentAnim]
-  const isPngAnim   = !!seq && !useSvg
-  const frameName   = isPngAnim ? seq.frames[frameIndex] : null
-
-  // Primary src = user's color; on error try orange; on second error → SVG
-  const primarySrc  = frameName ? imgSrcFor(color, frameName) : null
-  const fallbackSrc = frameName ? imgFallbackFor(frameName)   : null
-  const activeSrc   = isPngAnim ? (useFallback ? fallbackSrc : primarySrc) : null
+  const seq        = FRAME_SEQUENCES[currentAnim]
+  const isPngAnim  = !!seq
+  const frameName  = isPngAnim ? seq.frames[frameIndex] : null
+  const activeSrc  = frameName ? imgSrcFor(color, frameName) : null
 
   // CSS anim class for non-PNG actions (wag/spin/roll/knock/float) and greet
   const cssClass = !seq
@@ -222,7 +212,7 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
       ))}
 
       {/* ── Cat render ─────────────────────────────────────────────────────
-          Priority: color PNG → orange PNG fallback → CatSvg fallback       */}
+          PNG frame when a sequence exists, CatSvg for CSS-only actions     */}
       <div
         className={isPngAnim ? '' : cssClass}
         style={{
@@ -240,13 +230,7 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
             height={size}
             draggable={false}
             className="select-none object-contain w-full h-full"
-            onError={() => {
-              if (!useFallback) {
-                setUseFallback(true)   // try orange
-              } else {
-                setUseSvg(true)        // give up, use SVG
-              }
-            }}
+            onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         ) : (
           <CatSvg
