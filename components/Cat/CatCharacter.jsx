@@ -47,12 +47,15 @@ const TAP_ANIM_CLASS = {
   float:    'animate-float',
 }
 
+// Cache-bust version — increment when sprites are updated
+const SPRITE_VERSION = 3
+
 // Color fallback chain: try user color first, then orange
 function imgSrcFor(color, frame) {
-  return `/cat/${color}/${frame}.png`
+  return `/cat/${color}/${frame}.png?v=${SPRITE_VERSION}`
 }
 function imgFallbackFor(frame) {
-  return `/cat/orange/${frame}.png`
+  return `/cat/orange/${frame}.png?v=${SPRITE_VERSION}`
 }
 
 export default function CatCharacter({ cat, emotionalState = 'neutral', playAnimation, onAnimationEnd }) {

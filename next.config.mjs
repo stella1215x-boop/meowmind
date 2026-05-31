@@ -15,6 +15,17 @@ const withPWA = withPWAInit({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async headers() {
+    return [
+      {
+        // Cat animation sprites must never be served from SW/CDN cache
+        source: '/cat/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, must-revalidate' },
+        ],
+      },
+    ]
+  },
   // Prevent Next.js from bundling these native/DB packages — load as external Node modules
   serverExternalPackages: [
     '@prisma/client',
