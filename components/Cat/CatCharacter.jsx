@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import CatSvg from './CatSvg'
 import { getIntimacyTier, getSvgMood } from '@/lib/catGrowthService'
 
+// PNG fallback: show this frame during CSS-only animations (wag/knock/etc.)
+const CSS_FALLBACK_FRAME = 'idle_1'
+
 // ── Display size per stage ────────────────────────────────────────────────
 const DISPLAY_SIZE = [90, 108, 128, 150, 168, 188]
 
@@ -41,13 +44,14 @@ const CSS_ANIM_CLASS = {
 }
 
 // Always load from orange/ — only variant that exists for now
-const V = 3
+const V = 4
 function pngSrc(frame) {
   return `/cat/orange/${frame}.png?v=${V}`
 }
 
 export default function CatCharacter({ cat, emotionalState = 'neutral', playAnimation, onAnimationEnd }) {
   const [frameIndex,  setFrameIndex]  = useState(0)
+  const [imgFailed,   setImgFailed]   = useState(false)   // true if PNG 404/error
   const [bubble,      setBubble]      = useState(false)
   const [bubbleText,  setBubbleText]  = useState('')
   const [hasGreeted,  setHasGreeted]  = useState(false)
@@ -61,6 +65,19 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
   const intimacy = cat?.intimacy ?? 0
   const tier     = getIntimacyTier(intimacy)
   const svgMood  = getSvgMood(emotionalState, intimacy)
+
+  // ── Compute src early (needed by useEffect deps below) ───────────────
+  const activeAnim   = playAnimation || 'idle'
+  const seq          = FRAME_SEQUENCES[activeAnim]
+  const isCssOnly    = !seq && !!playAnimation
+  const frame        = seq ? seq.frames[frameIndex] : CSS_FALLBACK_FRAME
+  const src          = pngSrc(frame)
+  const cssAnimClass = isCssOnly
+    ? (CSS_ANIM_CLASS[playAnimation] ?? 'animate-float')
+    : (!hasGreeted && !playAnimation ? 'animate-cat-greet' : '')
+
+  // ── Reset imgFailed when PNG src changes ─────────────────────────────
+  useEffect(() => { setImgFailed(false) }, [src])
 
   // ── Greeting badge ────────────────────────────────────────────────────
   useEffect(() => {
@@ -147,16 +164,6 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
     }
   }, [playAnimation]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Render decision ───────────────────────────────────────────────────
-  const activeAnim  = playAnimation || 'idle'
-  const seq         = FRAME_SEQUENCES[activeAnim]
-  const isCssOnly   = !seq && !!playAnimation
-  const frame       = seq ? seq.frames[frameIndex] : null
-  const src         = frame ? pngSrc(frame) : null
-  const cssAnimClass = isCssOnly
-    ? (CSS_ANIM_CLASS[playAnimation] ?? 'animate-float')
-    : (!hasGreeted && !playAnimation ? 'animate-cat-greet' : '')
-
   return (
     <div className="relative flex flex-col items-center"
       style={{ width: size, minHeight: size + 64, background: 'transparent' }}>
@@ -188,12 +195,12 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
           style={{ left: `${h.left}%`, top: -16, animationDelay: `${h.delay}s` }}>❤️</span>
       ))}
 
-      {/* ── Cat ── PNG for idle/action sequences; CatSvg for CSS-only actions */}
+      {/* ── Cat ── always PNG; CatSvg only if PNG fails to load ─────────── */}
       <div
         className={cssAnimClass}
         style={{ filter: `drop-shadow(${tier.glow})`, width: size, height: size }}
       >
-        {!isCssOnly && src ? (
+        {!imgFailed ? (
           <img
             key={src}
             src={src}
@@ -202,7 +209,7 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
             height={size}
             draggable={false}
             className="select-none object-contain w-full h-full"
-            onError={e => { e.currentTarget.style.display = 'none' }}
+            onError={() => setImgFailed(true)}
           />
         ) : (
           <CatSvg stage={stage} color={color} mood={svgMood} size={size} className="select-none" />
