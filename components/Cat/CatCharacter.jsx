@@ -22,48 +22,38 @@ const ANIM_SPEECH = {
 }
 
 // ── PNG frame sequences ───────────────────────────────────────────────────
-//   Loaded from /public/cat/{color}/{frame}.png
-//   Falls back to /public/cat/orange/{frame}.png if color variant missing
 const FRAME_SEQUENCES = {
-  idle:     { frames: ['idle_1', 'idle_2'],                         fps: 1,  loop: true  },
-  eat:      { frames: ['eat_1', 'eat_2', 'eat_3', 'eat_4'],         fps: 3,  loop: false },
-  purr:     { frames: ['purr_1', 'purr_2', 'purr_3'],               fps: 3,  loop: false },
-  headbutt: { frames: ['headbutt_1', 'headbutt_2', 'headbutt_3'],   fps: 5,  loop: false },
-  nuzzle:   { frames: ['nuzzle_2', 'nuzzle_2'],                     fps: 2,  loop: false },
-  knead:    { frames: ['knead_1', 'knead_2', 'knead_3', 'knead_2'], fps: 3,  loop: false },
+  idle:     { frames: ['idle_1', 'idle_2'],                         fps: 1  },
+  eat:      { frames: ['eat_1', 'eat_2', 'eat_3', 'eat_4'],         fps: 3  },
+  purr:     { frames: ['purr_1', 'purr_2', 'purr_3'],               fps: 3  },
+  headbutt: { frames: ['headbutt_1', 'headbutt_2', 'headbutt_3'],   fps: 5  },
+  nuzzle:   { frames: ['nuzzle_2', 'nuzzle_2'],                     fps: 2  },
+  knead:    { frames: ['knead_1', 'knead_2', 'knead_3', 'knead_2'], fps: 3  },
 }
 
-// ── CSS-only fallback for actions without PNG frames ──────────────────────
-const TAP_ANIM_CLASS = {
-  purr:     'animate-purr',
-  wag:      'animate-wag',
-  spin:     'animate-spin',
-  roll:     'animate-roll',
-  knock:    'animate-knock',
-  eat:      'animate-eat',
-  headbutt: 'animate-headbutt',
-  nuzzle:   'animate-nuzzle',
-  knead:    'animate-knead',
-  float:    'animate-float',
+// ── CSS-only fallback (no PNG for these) ─────────────────────────────────
+const CSS_ANIM_CLASS = {
+  wag:   'animate-wag',
+  spin:  'animate-spin',
+  roll:  'animate-roll',
+  knock: 'animate-knock',
+  float: 'animate-float',
 }
 
-// Cache-bust version — increment when sprites are updated
-const SPRITE_VERSION = 3
-
-// Only orange sprites exist for now — always load from orange/
-// When grey/white variants are added, update this to use `color`
-function imgSrcFor(_color, frame) {
-  return `/cat/orange/${frame}.png?v=${SPRITE_VERSION}`
+// Always load from orange/ — only variant that exists for now
+const V = 3
+function pngSrc(frame) {
+  return `/cat/orange/${frame}.png?v=${V}`
 }
 
 export default function CatCharacter({ cat, emotionalState = 'neutral', playAnimation, onAnimationEnd }) {
-  const [currentAnim,    setCurrentAnim]    = useState('idle')
-  const [frameIndex,     setFrameIndex]     = useState(0)
-  const [bubble,         setBubble]         = useState(false)
-  const [bubbleText,     setBubbleText]     = useState('')
-  const [hasGreeted,     setHasGreeted]     = useState(false)
-  const [hearts,         setHearts]         = useState([])
-  const timerRef = useRef(null)
+  const [frameIndex,  setFrameIndex]  = useState(0)
+  const [bubble,      setBubble]      = useState(false)
+  const [bubbleText,  setBubbleText]  = useState('')
+  const [hasGreeted,  setHasGreeted]  = useState(false)
+  const [hearts,      setHearts]      = useState([])
+  const idleTimerRef  = useRef(null)
+  const actionTimerRef = useRef(null)
 
   const stage    = Math.min(cat?.stage ?? 0, 5)
   const size     = DISPLAY_SIZE[stage]
@@ -72,18 +62,11 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
   const tier     = getIntimacyTier(intimacy)
   const svgMood  = getSvgMood(emotionalState, intimacy)
 
-  // ── Start idle loop on mount ──────────────────────────────────────────
+  // ── Greeting badge ────────────────────────────────────────────────────
   useEffect(() => {
-    startAnim('idle')
     const t = setTimeout(() => setHasGreeted(true), 1900)
-    return () => {
-      clearTimeout(t)
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-        clearTimeout(timerRef.current)
-      }
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    return () => clearTimeout(t)
+  }, [])
 
   // ── Floating hearts ───────────────────────────────────────────────────
   const spawnHearts = useCallback(() => {
@@ -92,57 +75,33 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
       left: 15 + Math.random() * 70,
       delay: i * 0.15,
     }))
-    setHearts((prev) => [...prev, ...batch])
-    setTimeout(() => setHearts((prev) => prev.filter((h) => !batch.some((b) => b.id === h.id))), 1600)
+    setHearts(prev => [...prev, ...batch])
+    setTimeout(() => setHearts(prev => prev.filter(h => !batch.some(b => b.id === h.id))), 1600)
   }, [])
 
-  // ── Core animation runner ─────────────────────────────────────────────
-  function startAnim(name) {
-    if (timerRef.current) clearInterval(timerRef.current)
+  // ── IDLE loop — runs whenever no playAnimation ────────────────────────
+  useEffect(() => {
+    if (playAnimation) return   // action effect takes over
 
-    const seq = FRAME_SEQUENCES[name]
-    if (!seq) {
-      // CSS-only action (wag, spin, roll, knock, float) — play for 2.4s then back to idle PNG
-      setCurrentAnim(name)
-      timerRef.current = setTimeout(() => {
-        onAnimationEnd?.()
-        startAnim('idle')
-      }, 2400)
-      return
-    }
-
-    setCurrentAnim(name)
     setFrameIndex(0)
+    let idx = 0
+    idleTimerRef.current = setInterval(() => {
+      idx = (idx + 1) % FRAME_SEQUENCES.idle.frames.length
+      setFrameIndex(idx)
+    }, Math.round(1000 / FRAME_SEQUENCES.idle.fps))
 
-    if (seq.loop) {
-      // Looping idle — cycle frames forever
-      let idx = 0
-      timerRef.current = setInterval(() => {
-        idx = (idx + 1) % seq.frames.length
-        setFrameIndex(idx)
-      }, Math.round(1000 / seq.fps))
-    } else {
-      // One-shot action — play once then return to idle
-      const interval = Math.round(1000 / seq.fps)
-      let idx = 0
-      timerRef.current = setInterval(() => {
-        idx++
-        if (idx >= seq.frames.length) {
-          clearInterval(timerRef.current)
-          setTimeout(() => {
-            onAnimationEnd?.()
-            startAnim('idle')
-          }, interval)
-        } else {
-          setFrameIndex(idx)
-        }
-      }, interval)
+    return () => {
+      clearInterval(idleTimerRef.current)
+      idleTimerRef.current = null
     }
-  }
+  }, [playAnimation])
 
-  // ── Externally-triggered animation (feed, journal, tap) ───────────────
+  // ── ACTION animation — runs when playAnimation is set ─────────────────
   useEffect(() => {
     if (!playAnimation) return
+
+    // Clear any leftover idle timer
+    clearInterval(idleTimerRef.current)
 
     // Speech bubble
     const speech = ANIM_SPEECH[playAnimation]
@@ -154,39 +113,61 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
           : speech
       setBubbleText(finalSpeech)
       setBubble(true)
-      setTimeout(() => setBubble(false), 1900)
+      const bt = setTimeout(() => setBubble(false), 1900)
+      actionTimerRef.current = bt
     }
 
     if (intimacy >= 60) spawnHearts()
 
-    startAnim(playAnimation)
+    const seq = FRAME_SEQUENCES[playAnimation]
+
+    if (!seq) {
+      // CSS-only (wag, spin, roll, knock, float) — just wait then end
+      actionTimerRef.current = setTimeout(() => onAnimationEnd?.(), 2400)
+      return () => clearTimeout(actionTimerRef.current)
+    }
+
+    // PNG frame animation — play once then call onAnimationEnd
+    setFrameIndex(0)
+    const interval = Math.round(1000 / seq.fps)
+    let idx = 0
+    const timer = setInterval(() => {
+      idx++
+      if (idx >= seq.frames.length) {
+        clearInterval(timer)
+        actionTimerRef.current = setTimeout(() => onAnimationEnd?.(), interval)
+      } else {
+        setFrameIndex(idx)
+      }
+    }, interval)
+
+    return () => {
+      clearInterval(timer)
+      clearTimeout(actionTimerRef.current)
+    }
   }, [playAnimation]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Decide what to render ─────────────────────────────────────────────
-  const seq        = FRAME_SEQUENCES[currentAnim]
-  const isPngAnim  = !!seq
-  const frameName  = isPngAnim ? seq.frames[frameIndex] : null
-  const activeSrc  = frameName ? imgSrcFor(color, frameName) : null
-
-  // CSS anim class for non-PNG actions (wag/spin/roll/knock/float) and greet
-  const cssClass = !seq
-    ? (TAP_ANIM_CLASS[currentAnim] ?? 'animate-float')
-    : (!hasGreeted ? 'animate-cat-greet' : '')
+  // ── Render decision ───────────────────────────────────────────────────
+  const activeAnim  = playAnimation || 'idle'
+  const seq         = FRAME_SEQUENCES[activeAnim]
+  const isCssOnly   = !seq && !!playAnimation
+  const frame       = seq ? seq.frames[frameIndex] : null
+  const src         = frame ? pngSrc(frame) : null
+  const cssAnimClass = isCssOnly
+    ? (CSS_ANIM_CLASS[playAnimation] ?? 'animate-float')
+    : (!hasGreeted && !playAnimation ? 'animate-cat-greet' : '')
 
   return (
-    <div className="relative flex flex-col items-center" style={{ width: size, minHeight: size + 64, background: 'transparent' }}>
+    <div className="relative flex flex-col items-center"
+      style={{ width: size, minHeight: size + 64, background: 'transparent' }}>
 
-      {/* Stage crown / star deco */}
+      {/* Stage crown / star */}
       {stage >= 5 && (
         <div className="absolute z-10 text-2xl select-none drop-shadow"
-          style={{ top: -24, left: '50%', transform: 'translateX(-50%)' }}>
-          👑
-        </div>
+          style={{ top: -24, left: '50%', transform: 'translateX(-50%)' }}>👑</div>
       )}
       {stage === 4 && (
-        <div className="absolute z-10 text-xl select-none drop-shadow" style={{ top: -6, right: -10 }}>
-          ⭐
-        </div>
+        <div className="absolute z-10 text-xl select-none drop-shadow" style={{ top: -6, right: -10 }}>⭐</div>
       )}
 
       {/* Speech bubble */}
@@ -200,50 +181,35 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
         </div>
       )}
 
-      {/* Floating hearts (attached+ tier) */}
-      {hearts.map((h) => (
-        <span
-          key={h.id}
+      {/* Floating hearts */}
+      {hearts.map(h => (
+        <span key={h.id}
           className="absolute text-base pointer-events-none z-10 animate-heart-float select-none"
-          style={{ left: `${h.left}%`, top: -16, animationDelay: `${h.delay}s` }}
-        >
-          ❤️
-        </span>
+          style={{ left: `${h.left}%`, top: -16, animationDelay: `${h.delay}s` }}>❤️</span>
       ))}
 
-      {/* ── Cat render ─────────────────────────────────────────────────────
-          PNG frame when a sequence exists, CatSvg for CSS-only actions     */}
+      {/* ── Cat ── PNG for idle/action sequences; CatSvg for CSS-only actions */}
       <div
-        className={isPngAnim ? '' : cssClass}
-        style={{
-          filter: `drop-shadow(${tier.glow})`,
-          width: size,
-          height: size,
-        }}
+        className={cssAnimClass}
+        style={{ filter: `drop-shadow(${tier.glow})`, width: size, height: size }}
       >
-        {isPngAnim && activeSrc ? (
+        {!isCssOnly && src ? (
           <img
-            key={activeSrc}
-            src={activeSrc}
+            key={src}
+            src={src}
             alt=""
             width={size}
             height={size}
             draggable={false}
             className="select-none object-contain w-full h-full"
-            onError={(e) => { e.currentTarget.style.display = 'none' }}
+            onError={e => { e.currentTarget.style.display = 'none' }}
           />
         ) : (
-          <CatSvg
-            stage={stage}
-            color={color}
-            mood={svgMood}
-            size={size}
-            className="select-none"
-          />
+          <CatSvg stage={stage} color={color} mood={svgMood} size={size} className="select-none" />
         )}
       </div>
 
-      {/* Intimacy tier badge */}
+      {/* Tier badge */}
       <div className={`mt-2 px-3 py-0.5 rounded-full text-xs font-semibold transition-all duration-500 ${tier.badgeCls}`}>
         {tier.emoji} {tier.label}
       </div>
