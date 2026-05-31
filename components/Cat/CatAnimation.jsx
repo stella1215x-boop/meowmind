@@ -34,7 +34,7 @@ export default function CatAnimation({ cat, emotionalState, playAnimation, onAni
         onClick={handleTap}
         disabled={isBusy}
         aria-label={`Pet ${cat?.name ?? 'cat'}`}
-        className={`rounded-full transition-transform duration-100 select-none focus:outline-none
+        className={`bg-transparent rounded-full transition-transform duration-100 select-none focus:outline-none
           ${isBusy ? 'cursor-default' : 'cursor-pointer active:scale-90 hover:scale-105'}`}
       >
         <CatCharacter
