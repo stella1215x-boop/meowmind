@@ -82,7 +82,10 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
     const t = setTimeout(() => setHasGreeted(true), 1900)
     return () => {
       clearTimeout(t)
-      if (timerRef.current) clearInterval(timerRef.current)
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        clearTimeout(timerRef.current)
+      }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -103,8 +106,12 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
 
     const seq = FRAME_SEQUENCES[name]
     if (!seq) {
-      // CSS-only action (wag, spin, roll, knock, float)
+      // CSS-only action (wag, spin, roll, knock, float) — play for 2.4s then back to idle PNG
       setCurrentAnim(name)
+      timerRef.current = setTimeout(() => {
+        onAnimationEnd?.()
+        startAnim('idle')
+      }, 2400)
       return
     }
 
