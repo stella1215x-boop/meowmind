@@ -72,7 +72,7 @@ const AMBIENT_POOL = {
   legendary: ['groom', 'stretch', 'groom'],
 }
 
-const V = 5  // cache-buster — bump when replacing PNGs
+const V = 6  // cache-buster — bump when replacing PNGs
 
 export default function CatCharacter({ cat, emotionalState = 'neutral', playAnimation, onAnimationEnd }) {
   const [frameIndex,   setFrameIndex]   = useState(0)
