@@ -1,7 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import CatCharacter from '@/components/Cat/CatCharacter'
+import dynamic from 'next/dynamic'
+import CatSvg from '@/components/Cat/CatSvg'
+
+// Use the Rive character — same dynamic/ssr:false pattern as CatAnimation
+const CatRiveCharacter = dynamic(
+  () => import('@/components/Cat/CatRiveCharacter'),
+  { ssr: false, loading: () => <CatSvg stage={0} color="orange" mood="happy" size={108} /> }
+)
 
 const CONFETTI_COLORS = ['#C3B1E1', '#A8E6CF', '#FFD93D', '#FF6B6B', '#74C0FC', '#FFA07A']
 const CONFETTI_COUNT  = 20
@@ -69,12 +76,12 @@ export default function IntimacyRewardModal({ reward, cat, onClose }) {
         <h2 className="text-2xl font-extrabold text-gray-700 mt-1">{reward.title}</h2>
         <p className="text-gray-500 text-sm mt-1 leading-relaxed">{reward.subtitle}</p>
 
-        {/* Cat + speech bubble */}
+        {/* Cat (Rive) + speech bubble */}
         <div className="my-4 flex flex-col items-center gap-2">
-          <CatCharacter
-            cat={{ stage: cat?.stage ?? 0, color: cat?.color ?? 'orange', name: cat?.name }}
+          <CatRiveCharacter
+            cat={cat}           // pass full cat so tier badge shows correctly
             emotionalState="happy"
-            playAnimation="float"
+            playAnimation="purr"
           />
           <div className="bg-white rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm border border-gray-100">
             <p className="text-sm font-extrabold text-lavender">{cat?.name} 🐱</p>

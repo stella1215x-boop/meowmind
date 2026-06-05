@@ -1,8 +1,14 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import dynamic from 'next/dynamic'
 import { calcStage } from '@/lib/catGrowthService'
-import CatCharacter from '@/components/Cat/CatCharacter'
+import CatSvg from '@/components/Cat/CatSvg'
+
+const CatRiveCharacter = dynamic(
+  () => import('@/components/Cat/CatRiveCharacter'),
+  { ssr: false, loading: () => <CatSvg stage={0} color="orange" mood="happy" size={108} /> }
+)
 
 const MILESTONE_CONFIG = {
   7:   { emoji: '🌱', title: '7일 달성!',    subtitle: '일주일을 함께했어요',          bg: 'from-mint/30 to-white',     catAnim: '자라는 중이에요' },
@@ -87,9 +93,10 @@ export default function MilestoneModal({ milestone, catName, catColor, catStage,
 
         {/* 고양이 + 말풍선 */}
         <div className="my-4 flex flex-col items-center gap-2">
-          <CatCharacter
+          <CatRiveCharacter
             cat={{ stage: displayStage, color: catColor ?? 'orange', name: catName }}
             emotionalState="happy"
+            playAnimation="purr"
           />
           <div className="bg-white rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm border border-gray-100">
             <p className="text-sm font-extrabold text-lavender">{catName} 🐱</p>
