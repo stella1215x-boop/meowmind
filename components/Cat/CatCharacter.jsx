@@ -11,7 +11,13 @@ const VARIANT_FOLDERS = ['kitten', 'kitten', 'adult', 'adult', 'elder', 'elder']
 //                        stage 0   stage 1  stage 2  stage 3  stage 4  stage 5
 
 // Frames that exist in variant folders (stage-specific art)
-const VARIANT_FRAMES = new Set(['idle_1', 'idle_2', 'eat_1', 'groom_1', 'sad_1', 'sad_2', 'stretch_1'])
+const VARIANT_FRAMES = new Set([
+  'idle_1', 'idle_2',               // idle
+  'eat_1',  'eat_2',                // eat: approach → eating
+  'groom_1','groom_2','groom_3',    // groom: paw up → paw on face → licking
+  'sad_1',  'sad_2',                // sad state idle
+  'stretch_1',                      // stretch ambient
+])
 
 // ── Display size per stage ────────────────────────────────────────────────────
 const DISPLAY_SIZE = [90, 108, 128, 150, 168, 188]
@@ -34,17 +40,17 @@ const ANIM_SPEECH = {
 
 // ── PNG frame sequences ───────────────────────────────────────────────────────
 const FRAME_SEQUENCES = {
-  // Core (same for all stages — original detailed sprites)
-  eat:      { frames: ['eat_1', 'eat_2', 'eat_3', 'eat_4'],         fps: 3   },
+  // Core reactions — same art for all stages (original detailed sprites)
   purr:     { frames: ['purr_1', 'purr_2', 'purr_3'],               fps: 3   },
   headbutt: { frames: ['headbutt_1', 'headbutt_2', 'headbutt_3'],   fps: 5   },
   nuzzle:   { frames: ['nuzzle_2', 'nuzzle_2'],                     fps: 2   },
   knead:    { frames: ['knead_1', 'knead_2', 'knead_3', 'knead_2'], fps: 3   },
-  // Variant-aware (use kitten/adult/elder art)
-  idle:     { frames: ['idle_1', 'idle_2'],                         fps: 1   },
-  groom:    { frames: ['groom_1'],                                   fps: 1   },
-  sad:      { frames: ['sad_1', 'sad_2'],                           fps: 0.8 },
-  stretch:  { frames: ['stretch_1'],                                 fps: 1   },
+  // Variant-aware — kitten/adult/elder have their own art
+  idle:     { frames: ['idle_1', 'idle_2'],                          fps: 1   },
+  eat:      { frames: ['eat_1', 'eat_2', 'eat_2', 'eat_1'],         fps: 2   }, // approach → eat → eat → retreat
+  groom:    { frames: ['groom_1', 'groom_2', 'groom_2', 'groom_1'], fps: 1.5 }, // paw up → lick → lick → down
+  sad:      { frames: ['sad_1', 'sad_2'],                            fps: 0.8 },
+  stretch:  { frames: ['stretch_1'],                                  fps: 1   },
 }
 
 // ── CSS-only animations (no PNG frames needed) ────────────────────────────────
