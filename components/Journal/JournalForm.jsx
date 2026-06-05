@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import useCatStore from '@/store/useCatStore'
 
 const FIELD_CONFIG = [
   { label: '첫 번째 감사한 것', placeholder: '오늘 감사했던 순간을 한 문장으로...' },
@@ -9,6 +10,8 @@ const FIELD_CONFIG = [
 ]
 
 export default function JournalForm({ prompt, onSubmit }) {
+  const { addCoinsOptimistic } = useCatStore()
+
   const [sentences,      setSentences]      = useState(['', '', ''])
   const [done,           setDone]           = useState([false, false, false])
   const [coinPopKeys,    setCoinPopKeys]     = useState([null, null, null])
@@ -41,9 +44,15 @@ export default function JournalForm({ prompt, onSubmit }) {
     // Trigger coin pop animation (new key → React remounts → animation reruns)
     setCoinPopKeys(prev => { const n = [...prev]; n[i] = Date.now(); return n })
 
+    // ★ Optimistically update the coin counter in the store immediately
+    addCoinsOptimistic(10)
+
     if (newDone.every(Boolean)) {
-      // Show bonus badge, then slide in follow-up question
-      setTimeout(() => setBonusVisible(true), 300)
+      // Show bonus badge (+10), update coins, then slide in follow-up question
+      setTimeout(() => {
+        setBonusVisible(true)
+        addCoinsOptimistic(10) // completion bonus
+      }, 300)
       setTimeout(() => setPhase('followup'), 1400)
       setTimeout(() => followUpRef.current?.focus(), 1600)
     } else {
@@ -58,6 +67,8 @@ export default function JournalForm({ prompt, onSubmit }) {
   // ── Submit ───────────────────────────────────────────────────────────────
   async function handleSubmit(withAnswer) {
     if (loading) return
+    // Optimistically show the follow-up bonus before the API round-trip
+    if (withAnswer && canAnswer) addCoinsOptimistic(20)
     setLoading(true)
     await onSubmit(sentences, withAnswer && canAnswer ? followUpAnswer : null)
     setLoading(false)

@@ -42,6 +42,15 @@ const useCatStore = create((set, get) => ({
     set({ coinsEarned: null })
   },
 
+  // Optimistically add coins while user fills in the journal form.
+  // The final API response will overwrite the cat object anyway,
+  // so any small discrepancy is self-correcting on submit.
+  addCoinsOptimistic(amount) {
+    const cat = get().cat
+    if (!cat) return
+    set({ cat: { ...cat, coins: (cat.coins ?? 0) + amount } })
+  },
+
   triggerTapAnimation() {
     if (get().playAnimation) return
     const intimacy = get().cat?.intimacy ?? 0
