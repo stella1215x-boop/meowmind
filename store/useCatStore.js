@@ -83,8 +83,8 @@ const useCatStore = create((set, get) => ({
     }
   },
 
-  // Buy food from shop
-  async buyFood(itemId) {
+  // Buy any item from shop (food → foodCount, others → inventory)
+  async buyItem(itemId) {
     try {
       const res = await fetch('/api/cat/shop', {
         method: 'POST',
@@ -96,14 +96,41 @@ const useCatStore = create((set, get) => ({
         return { success: false, error: err.error }
       }
       const data = await res.json()
-      const cat = get().cat
-      if (cat) {
-        set({ cat: { ...cat, coins: data.coins, foodCount: data.foodCount } })
-      }
+      // Server returns full cat object — use it directly
+      if (data.cat) set({ cat: data.cat })
       return { success: true, ...data }
     } catch {
       return { success: false, error: 'Network error' }
     }
+  },
+
+  // Use a non-food consumable item (grooming, toy, nutrition)
+  async useItem(itemId, animationHint) {
+    if (get().playAnimation) return { success: false, error: 'Busy' }
+    // Trigger animation immediately for responsive feel
+    if (animationHint) set({ playAnimation: animationHint })
+    try {
+      const res = await fetch('/api/cat/use-item', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        set({ playAnimation: null })
+        return { success: false, error: err.error }
+      }
+      const data = await res.json()
+      if (data.cat) set({ cat: data.cat })
+      return { success: true, ...data }
+    } catch {
+      return { success: false, error: 'Network error' }
+    }
+  },
+
+  // Legacy alias kept for CoinPanel compatibility
+  async buyFood(itemId) {
+    return get().buyItem(itemId)
   },
 
   clearAnimation() {
