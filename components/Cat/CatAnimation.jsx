@@ -1,10 +1,21 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import useCatStore from '@/store/useCatStore'
-import CatRiveCharacter from './CatRiveCharacter'
 import IntimacyMeter from './IntimacyMeter'
 import { getStageLabel, getIntimacyTier } from '@/lib/catGrowthService'
+import CatSvg from './CatSvg'
+
+// Load Rive component only in the browser — never during SSR/build
+// @rive-app/react-canvas uses browser-only APIs (Canvas, WebWorker)
+const CatRiveCharacter = dynamic(
+  () => import('./CatRiveCharacter'),
+  {
+    ssr: false,
+    loading: () => <CatSvg stage={0} color="orange" mood="neutral" size={90} />,
+  }
+)
 
 export default function CatAnimation({ cat, emotionalState, playAnimation, onAnimationEnd }) {
   const { triggerTapAnimation } = useCatStore()

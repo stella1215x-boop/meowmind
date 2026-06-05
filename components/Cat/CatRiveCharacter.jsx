@@ -69,11 +69,11 @@ export default function CatRiveCharacter({
 
   // ── Rive ──────────────────────────────────────────────────────────────────
   const { rive, RiveComponent } = useRive({
-    src:        RIV_SRC,
-    artboard:   ARTBOARD,
-    animations: RIVE_IDLE,
-    autoplay:   true,
-    layout:     new Layout({ fit: Fit.Contain, alignment: Alignment.Center }),
+    src:      RIV_SRC,
+    artboard: ARTBOARD,          // 'Big Cat' — verified from .riv binary
+    autoplay: true,
+    layout:   new Layout({ fit: Fit.Contain, alignment: Alignment.Center }),
+    onLoad:   () => { console.log('[Rive] loaded ✓') },
     onLoadError(err) {
       console.error('[Rive] load error:', err)
       setRiveError(true)
