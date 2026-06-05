@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import useCatStore from '@/store/useCatStore'
-import CatCharacter from './CatCharacter'
+import CatRiveCharacter from './CatRiveCharacter'
 import IntimacyMeter from './IntimacyMeter'
 import { getStageLabel, getIntimacyTier } from '@/lib/catGrowthService'
 
@@ -38,7 +38,7 @@ export default function CatAnimation({ cat, emotionalState, playAnimation, onAni
           ${isBusy ? 'cursor-default' : 'cursor-pointer active:scale-90 hover:scale-105'}`}
         style={{ background: 'transparent', WebkitAppearance: 'none', border: 'none', padding: 0 }}
       >
-        <CatCharacter
+        <CatRiveCharacter
           cat={cat}
           emotionalState={emotionalState}
           playAnimation={playAnimation}
