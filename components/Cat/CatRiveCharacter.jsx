@@ -5,28 +5,29 @@ import { useRive, EventType, Layout, Fit, Alignment } from '@rive-app/react-canv
 import { getIntimacyTier, getSvgMood } from '@/lib/catGrowthService'
 import CatSvg from './CatSvg'
 
-// ── Rive animation names (from the .riv file) ─────────────────────────────────
-const RIVE_IDLE  = 'Action01_Sitting9'
-const RIVE_EAT   = 'Action02_Eating9'
-const RIVE_PLAY  = 'Action03_Play9'
+// ── Rive file internals ───────────────────────────────────────────────────────
+const RIV_SRC     = '/cat/cat.riv'
+const ARTBOARD    = 'Big Cat'          // exact name from .riv file (space, not underscore)
+const RIVE_IDLE   = 'Action01_Sitting9'
+const RIVE_EAT    = 'Action02_Eating9'
+const RIVE_PLAY   = 'Action03_Play9'
 
-// Map our playAnimation keys → which Rive animation to play
+// Map every playAnimation key → Rive animation name
 const ANIM_MAP = {
-  eat:      { riv: RIVE_EAT,  loop: false },
-  purr:     { riv: RIVE_PLAY, loop: false },
-  headbutt: { riv: RIVE_PLAY, loop: false },
-  nuzzle:   { riv: RIVE_PLAY, loop: false },
-  knead:    { riv: RIVE_PLAY, loop: false },
-  groom:    { riv: RIVE_PLAY, loop: false },
-  wag:      { riv: RIVE_PLAY, loop: false },
-  spin:     { riv: RIVE_PLAY, loop: false },
-  roll:     { riv: RIVE_PLAY, loop: false },
-  knock:    { riv: RIVE_PLAY, loop: false },
-  float:    { riv: RIVE_PLAY, loop: false },
-  stretch:  { riv: RIVE_PLAY, loop: false },
+  eat:      RIVE_EAT,
+  purr:     RIVE_PLAY,
+  headbutt: RIVE_PLAY,
+  nuzzle:   RIVE_PLAY,
+  knead:    RIVE_PLAY,
+  groom:    RIVE_PLAY,
+  wag:      RIVE_PLAY,
+  spin:     RIVE_PLAY,
+  roll:     RIVE_PLAY,
+  knock:    RIVE_PLAY,
+  float:    RIVE_PLAY,
+  stretch:  RIVE_PLAY,
 }
 
-// Speech bubbles per action
 const ANIM_SPEECH = {
   purr:     'Purrrr~ 😻',
   wag:      'My tail is excited! 🐾',
@@ -42,7 +43,6 @@ const ANIM_SPEECH = {
   stretch:  '*big yawn* 😪',
 }
 
-// Display size per stage — cat grows visually
 const DISPLAY_SIZE = [90, 108, 128, 150, 168, 188]
 
 export default function CatRiveCharacter({
@@ -51,13 +51,13 @@ export default function CatRiveCharacter({
   playAnimation,
   onAnimationEnd,
 }) {
-  const [bubble,      setBubble]      = useState(false)
-  const [bubbleText,  setBubbleText]  = useState('')
-  const [hasGreeted,  setHasGreeted]  = useState(false)
-  const [hearts,      setHearts]      = useState([])
-  const [riveError,   setRiveError]   = useState(false)  // fallback to SVG if Rive fails
-  const bubbleTimerRef  = useRef(null)
-  const actionTimerRef  = useRef(null)
+  const [bubble,     setBubble]     = useState(false)
+  const [bubbleText, setBubbleText] = useState('')
+  const [hasGreeted, setHasGreeted] = useState(false)
+  const [hearts,     setHearts]     = useState([])
+  const [riveError,  setRiveError]  = useState(false)
+  const bubbleTimerRef = useRef(null)
+  const safetyTimerRef = useRef(null)
 
   const stage    = Math.min(cat?.stage ?? 0, 5)
   const size     = DISPLAY_SIZE[stage]
@@ -65,57 +65,62 @@ export default function CatRiveCharacter({
   const intimacy = cat?.intimacy ?? 0
   const tier     = getIntimacyTier(intimacy)
   const svgMood  = getSvgMood(emotionalState, intimacy)
+  const isSad    = emotionalState === 'sad' || emotionalState === 'hungry'
 
-  // ── Rive setup ───────────────────────────────────────────────────────────
+  // ── Rive ──────────────────────────────────────────────────────────────────
   const { rive, RiveComponent } = useRive({
-    src:       '/cat/cat.riv',
-    artboard:  'Big_Cat',
+    src:        RIV_SRC,
+    artboard:   ARTBOARD,
     animations: RIVE_IDLE,
-    autoplay:  true,
-    layout:    new Layout({ fit: Fit.Contain, alignment: Alignment.Center }),
-    onLoadError: () => setRiveError(true),
+    autoplay:   true,
+    layout:     new Layout({ fit: Fit.Contain, alignment: Alignment.Center }),
+    onLoadError(err) {
+      console.error('[Rive] load error:', err)
+      setRiveError(true)
+    },
   })
 
-  // ── Greeting animation on first load ─────────────────────────────────────
+  // ── Greeting ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const t = setTimeout(() => setHasGreeted(true), 1900)
     return () => clearTimeout(t)
   }, [])
 
-  // ── Floating hearts ───────────────────────────────────────────────────────
+  // ── Hearts ────────────────────────────────────────────────────────────────
   const spawnHearts = useCallback(() => {
     const batch = Array.from({ length: 4 }, (_, i) => ({
-      id: Date.now() + i,
-      left: 15 + Math.random() * 70,
-      delay: i * 0.15,
+      id: Date.now() + i, left: 15 + Math.random() * 70, delay: i * 0.15,
     }))
     setHearts(prev => [...prev, ...batch])
-    setTimeout(
-      () => setHearts(prev => prev.filter(h => !batch.some(b => b.id === h.id))),
-      1600,
-    )
+    setTimeout(() => setHearts(prev => prev.filter(h => !batch.some(b => b.id === h.id))), 1600)
   }, [])
 
-  // ── Play animation when playAnimation prop changes ────────────────────────
+  // ── Sad/hungry: slow idle playback ───────────────────────────────────────
+  useEffect(() => {
+    if (!rive || playAnimation) return
+    rive.playbackRate = isSad ? 0.4 : 1.0
+  }, [rive, isSad, playAnimation])
+
+  // ── Animation control ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!rive) return
 
+    // Back to idle
     if (!playAnimation) {
-      // Return to idle loop
+      rive.pause()
+      rive.playbackRate = isSad ? 0.4 : 1.0
       rive.play(RIVE_IDLE)
       return
     }
 
-    const mapping = ANIM_MAP[playAnimation]
-    const rivAnim = mapping?.riv ?? RIVE_PLAY
+    const rivAnim = ANIM_MAP[playAnimation] ?? RIVE_PLAY
 
     // Speech bubble
     const speech = ANIM_SPEECH[playAnimation]
     if (speech) {
-      const tierSpeech = tier.speech
       const final =
         intimacy >= 60 && Math.random() < 0.4
-          ? tierSpeech[Math.floor(Math.random() * tierSpeech.length)]
+          ? tier.speech[Math.floor(Math.random() * tier.speech.length)]
           : speech
       setBubbleText(final)
       setBubble(true)
@@ -125,47 +130,40 @@ export default function CatRiveCharacter({
 
     if (intimacy >= 60) spawnHearts()
 
-    // Play the Rive animation
+    // Reset speed for action
+    rive.playbackRate = 1.0
     rive.play(rivAnim)
 
-    // Listen for when this animation stops → call onAnimationEnd → back to idle
+    // Detect end of one-shot animation → return to idle
     function handleStop(event) {
-      if (event?.data?.includes?.(rivAnim)) {
-        rive.off(EventType.Stop, handleStop)
+      const stoppedAnims = event?.data ?? []
+      if (Array.isArray(stoppedAnims) && stoppedAnims.includes(rivAnim)) {
+        cleanup()
         rive.play(RIVE_IDLE)
         onAnimationEnd?.()
       }
     }
     rive.on(EventType.Stop, handleStop)
 
-    // Safety timeout in case the event never fires
-    clearTimeout(actionTimerRef.current)
-    actionTimerRef.current = setTimeout(() => {
+    // Safety fallback
+    clearTimeout(safetyTimerRef.current)
+    safetyTimerRef.current = setTimeout(() => {
       rive.off(EventType.Stop, handleStop)
       rive.play(RIVE_IDLE)
       onAnimationEnd?.()
-    }, 4000)
+    }, 5000)
 
-    return () => {
+    function cleanup() {
       rive.off(EventType.Stop, handleStop)
-      clearTimeout(actionTimerRef.current)
+      clearTimeout(safetyTimerRef.current)
     }
+    return cleanup
   }, [playAnimation, rive]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Sad/hungry: slow down the idle when emotional state is negative ───────
-  useEffect(() => {
-    if (!rive) return
-    if (!playAnimation) {
-      const isSad = emotionalState === 'sad' || emotionalState === 'hungry'
-      // Speed: 1.0 = normal, 0.4 = slow droopy feeling
-      rive.playbackRate = isSad ? 0.4 : 1.0
-    }
-  }, [rive, emotionalState, playAnimation])
-
-  // ── Cleanup on unmount ────────────────────────────────────────────────────
+  // ── Cleanup ───────────────────────────────────────────────────────────────
   useEffect(() => () => {
     clearTimeout(bubbleTimerRef.current)
-    clearTimeout(actionTimerRef.current)
+    clearTimeout(safetyTimerRef.current)
   }, [])
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -173,7 +171,6 @@ export default function CatRiveCharacter({
     <div className="relative flex flex-col items-center"
       style={{ width: size, minHeight: size + 64, background: 'transparent' }}>
 
-      {/* Stage decorations */}
       {stage >= 5 && (
         <div className="absolute z-10 text-2xl select-none drop-shadow"
           style={{ top: -24, left: '50%', transform: 'translateX(-50%)' }}>👑</div>
@@ -183,7 +180,6 @@ export default function CatRiveCharacter({
           style={{ top: -6, right: -10 }}>⭐</div>
       )}
 
-      {/* Speech bubble */}
       {bubble && (
         <div className="absolute z-20 animate-milestone-pop pointer-events-none"
           style={{ top: -56, left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap' }}>
@@ -194,33 +190,24 @@ export default function CatRiveCharacter({
         </div>
       )}
 
-      {/* Floating hearts */}
       {hearts.map(h => (
         <span key={h.id}
           className="absolute text-base pointer-events-none z-10 animate-heart-float select-none"
           style={{ left: `${h.left}%`, top: -16, animationDelay: `${h.delay}s` }}>❤️</span>
       ))}
 
-      {/* Cat — Rive or SVG fallback */}
+      {/* Cat — Rive canvas or SVG fallback */}
       <div
-        style={{
-          width: size,
-          height: size,
-          filter: `drop-shadow(${tier.glow})`,
-        }}
-        className={!hasGreeted ? 'animate-cat-greet' : ''}
+        style={{ width: size, height: size, filter: `drop-shadow(${tier.glow})` }}
+        className={!hasGreeted && !riveError ? 'animate-cat-greet' : ''}
       >
         {riveError ? (
           <CatSvg stage={stage} color={color} mood={svgMood} size={size} className="select-none" />
         ) : (
-          <RiveComponent
-            style={{ width: size, height: size }}
-            aria-label={`${cat?.name ?? 'cat'} animation`}
-          />
+          <RiveComponent style={{ width: '100%', height: '100%' }} />
         )}
       </div>
 
-      {/* Intimacy tier badge */}
       <div className={`mt-2 px-3 py-0.5 rounded-full text-xs font-semibold
                        transition-all duration-500 ${tier.badgeCls}`}>
         {tier.emoji} {tier.label}
