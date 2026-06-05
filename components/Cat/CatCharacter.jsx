@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import Image from 'next/image'
 import CatSvg from './CatSvg'
 import { getIntimacyTier, getSvgMood } from '@/lib/catGrowthService'
 
@@ -201,12 +202,13 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
         style={{ filter: `drop-shadow(${tier.glow})`, width: size, height: size }}
       >
         {!imgFailed ? (
-          <img
+          <Image
             key={src}
             src={src}
             alt=""
             width={size}
             height={size}
+            unoptimized   // sprite PNGs served as-is; cache-busted via ?v= param
             draggable={false}
             className="select-none object-contain w-full h-full"
             onError={() => setImgFailed(true)}

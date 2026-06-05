@@ -19,7 +19,7 @@ const PANTRY_SLOTS = [
 ]
 
 export default function CoinPanel() {
-  const { cat, feedCat, buyItem, useItem, playAnimation } = useCatStore()
+  const { cat, feedCat, buyItem, consumeItem, playAnimation } = useCatStore()
 
   const coins     = cat?.coins     ?? 0
   const foodCount = cat?.foodCount ?? 0
@@ -75,7 +75,7 @@ export default function CoinPanel() {
   async function handleUse(item) {
     if (playAnimation || using) return
     setUsing(item.id)
-    const result = await useItem(item.id, item.animationHint)
+    const result = await consumeItem(item.id, item.animationHint)
     setUsing(null)
     if (result.success) {
       showToast(`${item.emoji} 사용 완료! 친밀도 +${item.intimacyGain} 💛`)

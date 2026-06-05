@@ -107,7 +107,8 @@ const useCatStore = create((set, get) => ({
   },
 
   // Use a non-food consumable item (grooming, toy, nutrition)
-  async useItem(itemId, animationHint) {
+  // Named consumeItem (not useItem) to avoid ESLint Rules of Hooks false-positive
+  async consumeItem(itemId, animationHint) {
     if (get().playAnimation) return { success: false, error: 'Busy' }
     // Trigger animation immediately for responsive feel
     if (animationHint) set({ playAnimation: animationHint })
