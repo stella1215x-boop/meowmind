@@ -32,11 +32,11 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
   const activeState  = cat ? emotionalState : initialState
   const activeWritten = cat ? hasWrittenToday : initialWritten
 
-  async function handleJournalSubmit(sentences) {
+  async function handleJournalSubmit(sentences, followUpAnswer = null) {
     const res = await fetch('/api/journal', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sentences }),
+      body: JSON.stringify({ sentences, followUpAnswer }),
     })
 
     if (res.status === 409) {

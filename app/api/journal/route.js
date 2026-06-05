@@ -34,7 +34,7 @@ export async function POST(req) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { sentences } = await req.json()
+  const { sentences, followUpAnswer } = await req.json()
   if (!sentences || sentences.length !== 3) {
     return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
   }
@@ -71,21 +71,26 @@ export async function POST(req) {
   const newStage = calcStage(newTotal)
   const isMilestone = MILESTONES.includes(newTotal) ? newTotal : null
 
-  // Coins: 10 per sentence (3 sentences = 30 coins)
-  const COINS_PER_SENTENCE = 10
-  const validCount = sentences.filter(s => s.trim().length >= 2).length
-  const coinsEarned = validCount * COINS_PER_SENTENCE
+  // Coins: 10 per sentence (3 × 10 = 30) + 10 completion bonus + 20 follow-up bonus
+  const sentenceCoins    = 30                                                 // always 3 valid sentences
+  const completionBonus  = 10                                                 // reward for completing all 3
+  const followUpBonus    = followUpAnswer?.trim().length >= 5 ? 20 : 0       // optional deep-reflection bonus
+  const coinsEarned      = sentenceCoins + completionBonus + followUpBonus   // 40–60 before streak
   // Bonus +50 every 7-day streak milestone
-  const streakBonus = newStreak > 0 && newStreak % 7 === 0 ? 50 : 0
+  const streakBonus      = newStreak > 0 && newStreak % 7 === 0 ? 50 : 0
   const totalCoinsEarned = coinsEarned + streakBonus
-  const newCoins = (cat?.coins ?? 0) + totalCoinsEarned
+  const newCoins         = (cat?.coins ?? 0) + totalCoinsEarned
 
   // Intimacy: +5 per journal entry, capped at 100
   const newIntimacy = Math.min((cat?.intimacy ?? 0) + 5, 100)
 
   const [entry, updatedCat] = await prisma.$transaction(async (tx) => {
+    const content = JSON.stringify({
+      sentences,
+      followUpAnswer: followUpAnswer?.trim().length >= 5 ? followUpAnswer.trim() : null,
+    })
     const e = await tx.journalEntry.create({
-      data: { userId, content: JSON.stringify(sentences), mood },
+      data: { userId, content, mood },
     })
     const c = await tx.cat.update({
       where: { userId },

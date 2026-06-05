@@ -25,8 +25,15 @@ export default function EntryCard({ entry, highlight = false }) {
   const date = formatDate(entry.createdAt)
 
   let sentences = []
+  let followUpAnswer = null
   try {
-    sentences = JSON.parse(entry.content)
+    const parsed = JSON.parse(entry.content)
+    if (Array.isArray(parsed)) {
+      sentences = parsed                          // old format: plain array
+    } else {
+      sentences      = parsed.sentences ?? []    // new format: { sentences, followUpAnswer }
+      followUpAnswer = parsed.followUpAnswer ?? null
+    }
   } catch {
     sentences = [entry.content]
   }
@@ -75,7 +82,7 @@ export default function EntryCard({ entry, highlight = false }) {
         </svg>
       </button>
 
-      {/* 펼쳐진 3문장 */}
+      {/* 펼쳐진 3문장 + 선택적 오늘의 질문 답변 */}
       {expanded && (
         <div className="px-4 pb-4 space-y-2 border-t border-gray-50 pt-3">
           {sentences.map((s, i) => (
@@ -86,6 +93,15 @@ export default function EntryCard({ entry, highlight = false }) {
               <p className="text-sm text-gray-600 leading-relaxed flex-1">{s}</p>
             </div>
           ))}
+
+          {/* 오늘의 질문 답변 */}
+          {followUpAnswer && (
+            <div className="mt-2 bg-lavender/5 rounded-xl px-3 py-2.5 border border-lavender/15">
+              <p className="text-[10px] font-bold text-lavender mb-1">💬 오늘의 질문 답변</p>
+              <p className="text-sm text-gray-600 leading-relaxed">{followUpAnswer}</p>
+            </div>
+          )}
+
           <p className="text-right text-[10px] text-gray-300 mt-1">{date.full}</p>
         </div>
       )}
