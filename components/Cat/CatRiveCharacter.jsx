@@ -6,11 +6,14 @@ import { getIntimacyTier, getSvgMood } from '@/lib/catGrowthService'
 import CatSvg from './CatSvg'
 
 // ── Rive file internals ───────────────────────────────────────────────────────
-const RIV_SRC     = '/cat/cat.riv'
-const ARTBOARD    = 'Big Cat'          // exact name from .riv file (space, not underscore)
-const RIVE_IDLE   = 'Action01_Sitting9'
-const RIVE_EAT    = 'Action02_Eating9'
-const RIVE_PLAY   = 'Action03_Play9'
+// Animation names verified by loading the file with vanilla Rive in-browser:
+//   rive.animationNames → ['00_Normal','Action01_Sitting','Action02_Eating',
+//                          'Action03_Play','Props01_00',...,'Props02_03']
+const RIV_SRC   = '/cat/cat.riv'
+// No artboard specified — file has one artboard, let Rive pick it automatically
+const RIVE_IDLE = 'Action01_Sitting'
+const RIVE_EAT  = 'Action02_Eating'
+const RIVE_PLAY = 'Action03_Play'
 
 // Map every playAnimation key → Rive animation name
 const ANIM_MAP = {
@@ -69,11 +72,12 @@ export default function CatRiveCharacter({
 
   // ── Rive ──────────────────────────────────────────────────────────────────
   const { rive, RiveComponent } = useRive({
-    src:      RIV_SRC,
-    artboard: ARTBOARD,          // 'Big Cat' — verified from .riv binary
-    autoplay: true,
-    layout:   new Layout({ fit: Fit.Contain, alignment: Alignment.Center }),
-    onLoad:   () => { console.log('[Rive] loaded ✓') },
+    src:        RIV_SRC,
+    // No artboard: auto-picks the single artboard in the file
+    animations: RIVE_IDLE,   // correct name verified via rive.animationNames in-browser
+    autoplay:   true,
+    layout:     new Layout({ fit: Fit.Contain, alignment: Alignment.Center }),
+    onLoad:     () => console.log('[Rive] ✓ loaded'),
     onLoadError(err) {
       console.error('[Rive] load error:', err)
       setRiveError(true)
