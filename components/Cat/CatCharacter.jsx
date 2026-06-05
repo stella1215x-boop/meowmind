@@ -96,16 +96,27 @@ export default function CatCharacter({ cat, emotionalState = 'neutral', playAnim
 
   // ── Resolve active animation: playAnimation > ambientAnim > idle ──────────
   // State-based override: sad/hungry → show sad frames in idle
-  const isSadState   = !playAnimation && !ambientAnim &&
-                       (emotionalState === 'sad' || emotionalState === 'hungry')
-  const activeAnim   = playAnimation || ambientAnim || (isSadState ? 'sad' : 'idle')
-  const seq          = FRAME_SEQUENCES[activeAnim]
-  const isCssOnly    = !seq && !!playAnimation
-  const frame        = seq ? seq.frames[frameIndex] : 'idle_1'   // CSS fallback
-  const src          = pngSrc(frame)
-  const cssAnimClass = isCssOnly
-    ? (CSS_ANIM_CLASS[playAnimation] ?? 'animate-float')
-    : (!hasGreeted && !playAnimation && !ambientAnim ? 'animate-cat-greet' : '')
+  const isSadState = !playAnimation && !ambientAnim &&
+                     (emotionalState === 'sad' || emotionalState === 'hungry')
+  const activeAnim = playAnimation || ambientAnim || (isSadState ? 'sad' : 'idle')
+  const seq        = FRAME_SEQUENCES[activeAnim]
+  const isCssOnly  = !seq && !!playAnimation
+  const frame      = seq ? seq.frames[frameIndex] : 'idle_1'
+  const src        = pngSrc(frame)
+
+  // ── Wrapper micro-animation — layered on top of PNG frames ───────────────
+  // Creates natural feel: breathing, bobbing, nodding, etc.
+  function getMotionClass() {
+    if (isCssOnly)                     return CSS_ANIM_CLASS[playAnimation] ?? 'animate-float'
+    if (!hasGreeted && !playAnimation && !ambientAnim) return 'animate-cat-greet'
+    if (playAnimation === 'eat')       return 'animate-cat-eat-bob'
+    if (ambientAnim === 'groom')       return 'animate-cat-groom-nod'
+    if (ambientAnim === 'stretch')     return 'animate-cat-stretch-expand'
+    if (isSadState)                    return 'animate-cat-sad-sway'
+    if (!playAnimation && !ambientAnim) return 'animate-cat-breathe'
+    return ''
+  }
+  const cssAnimClass = getMotionClass()
 
   // ── Reset imgFailed when src changes ─────────────────────────────────────
   useEffect(() => { setImgFailed(false) }, [src])

@@ -75,6 +75,20 @@ module.exports = {
 
         // Heart float particle
         'heart-float': 'heart-float 1.4s ease-out forwards',
+
+        // ── Natural micro-animations ─────────────────────────────────────
+        // Idle: gentle breathing (always on)
+        'cat-breathe':        'cat-breathe 3.2s ease-in-out infinite',
+        // Sad/hungry state: quiet droopy sway
+        'cat-sad-sway':       'cat-sad-sway 5s ease-in-out infinite',
+        // Groom ambient: head nods as cat licks paw
+        'cat-groom-nod':      'cat-groom-nod 1.6s ease-in-out',
+        // Stretch ambient: squash down then expand upward
+        'cat-stretch-expand': 'cat-stretch-expand 1.8s cubic-bezier(0.34,1.56,0.64,1)',
+        // Eat: rhythmic head-dip bob
+        'cat-eat-bob':        'cat-eat-bob 0.55s ease-in-out infinite',
+        // Idle blink micro: occasional subtle scale pulse
+        'cat-idle-pulse':     'cat-idle-pulse 6s ease-in-out infinite',
       },
       keyframes: {
         wiggle: {
@@ -189,6 +203,43 @@ module.exports = {
           '0%':   { transform: 'translateY(0) scale(0.5)', opacity: '1' },
           '60%':  { transform: 'translateY(-40px) scale(1.2)', opacity: '0.9' },
           '100%': { transform: 'translateY(-70px) scale(1)', opacity: '0' },
+        },
+
+        // ── Natural micro-animation keyframes ──────────────────────────────
+        'cat-breathe': {
+          '0%, 100%': { transform: 'translateY(0px) scale(1)' },
+          '40%':      { transform: 'translateY(-5px) scale(1.015)' },
+          '70%':      { transform: 'translateY(-3px) scale(1.008)' },
+        },
+        'cat-sad-sway': {
+          '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+          '20%':      { transform: 'translateY(3px) rotate(-2deg)' },
+          '50%':      { transform: 'translateY(4px) rotate(0deg)' },
+          '80%':      { transform: 'translateY(3px) rotate(2deg)' },
+        },
+        'cat-groom-nod': {
+          '0%':        { transform: 'rotate(0deg) translateY(0)' },
+          '15%':       { transform: 'rotate(-8deg) translateY(-4px)' },
+          '35%':       { transform: 'rotate(-5deg) translateY(-7px)' },
+          '55%':       { transform: 'rotate(-9deg) translateY(-5px)' },
+          '75%':       { transform: 'rotate(-4deg) translateY(-3px)' },
+          '100%':      { transform: 'rotate(0deg) translateY(0)' },
+        },
+        'cat-stretch-expand': {
+          '0%':        { transform: 'scale(1, 1)' },
+          '20%':       { transform: 'scale(1.05, 0.88) translateY(6px)' },
+          '50%':       { transform: 'scale(0.92, 1.12) translateY(-6px)' },
+          '75%':       { transform: 'scale(1.03, 0.96) translateY(2px)' },
+          '100%':      { transform: 'scale(1, 1) translateY(0)' },
+        },
+        'cat-eat-bob': {
+          '0%, 100%':  { transform: 'translateY(0) rotate(0deg)' },
+          '40%':       { transform: 'translateY(9px) rotate(-4deg) scaleY(0.95)' },
+        },
+        'cat-idle-pulse': {
+          '0%, 85%, 100%': { transform: 'scale(1)' },
+          '90%':           { transform: 'scale(1.025)' },
+          '95%':           { transform: 'scale(0.99)' },
         },
       },
     },
