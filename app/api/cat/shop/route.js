@@ -5,8 +5,8 @@ import prisma from '@/lib/prisma'
 
 // 상점 아이템 목록
 export const SHOP_ITEMS = {
-  snack: { id: 'snack', name: '고양이 간식 🐟', cost: 30, quantity: 1, desc: '한 번 먹일 수 있어요' },
-  meal:  { id: 'meal',  name: '고양이 밥 🍱',   cost: 80, quantity: 3, desc: '3번 먹일 수 있어요 (30% 절약!)' },
+  meal:  { id: 'meal',  name: '고양이 밥 🍱',   cost: 30, quantity: 3, desc: '3번 먹일 수 있어요' },
+  snack: { id: 'snack', name: '고양이 간식 🐟', cost: 70, quantity: 1, desc: '한 번 먹일 수 있어요' },
 }
 
 // GET: 상점 아이템 목록 + 현재 코인/음식 잔고

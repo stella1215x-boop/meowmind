@@ -4,8 +4,8 @@ import { useState } from 'react'
 import useCatStore from '@/store/useCatStore'
 
 const SHOP_ITEMS = [
-  { id: 'snack', name: '고양이 간식', emoji: '🐟', cost: 30, quantity: 1,  desc: '한 번 먹일 수 있어요' },
-  { id: 'meal',  name: '고양이 밥',   emoji: '🍱', cost: 80, quantity: 3,  desc: '3번 먹일 수 있어요 · 30% 절약' },
+  { id: 'meal',  name: '고양이 밥',   emoji: '🍱', cost: 30, quantity: 3,  desc: '3번 먹일 수 있어요' },
+  { id: 'snack', name: '고양이 간식', emoji: '🐟', cost: 70, quantity: 1,  desc: '한 번 먹일 수 있어요' },
 ]
 
 export default function CoinPanel() {
@@ -175,7 +175,7 @@ export default function CoinPanel() {
           {/* How to earn coins hint */}
           <div className="px-4 py-2.5 bg-yellow-50/60 border-t border-yellow-100/60">
             <p className="text-[11px] text-yellow-700 text-center leading-relaxed">
-              ✍️ 매일 3문장 작성 → <span className="font-bold">30코인</span> 획득
+              ✍️ 매일 3문장 작성 → <span className="font-bold">최대 60코인</span> 획득
               &nbsp;·&nbsp; 7일 연속 → <span className="font-bold">+50 보너스</span>
             </p>
           </div>
