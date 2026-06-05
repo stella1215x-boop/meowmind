@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { getItem, normalizeInventory } from '@/lib/shopCatalog'
+import { checkTierReward } from '@/lib/tierRewardService'
 
 // POST: Use a non-food item from the pantry
 // Body: { itemId: string }
@@ -35,10 +36,17 @@ export async function POST(req) {
   // Consume 1 and award intimacy
   inventory[item.inventoryKey] = count - 1
   const newIntimacy = Math.min((cat.intimacy ?? 0) + item.intimacyGain, 100)
+  const tierResult  = checkTierReward(newIntimacy, cat.rewardedTier ?? 0)
+  const tierBonus   = tierResult?.bonusCoins ?? 0
 
   const updatedCat = await prisma.cat.update({
     where: { userId: session.user.id },
-    data: { inventory, intimacy: newIntimacy },
+    data: {
+      inventory,
+      intimacy: newIntimacy,
+      ...(tierBonus > 0 && { coins: (cat.coins ?? 0) + tierBonus }),
+      ...(tierResult    && { rewardedTier: tierResult.newRewardedTier }),
+    },
   })
 
   return NextResponse.json({
@@ -47,5 +55,6 @@ export async function POST(req) {
     inventory:     normalizeInventory(updatedCat.inventory),
     intimacyGain:  item.intimacyGain,
     animationHint: item.animationHint,
+    tierReward:    tierResult?.reward ?? null,
   })
 }

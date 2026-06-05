@@ -14,12 +14,13 @@ const useCatStore = create((set, get) => ({
   playAnimation: null,   // string | null
   milestone: null,       // 7 | 14 | 30 | 60 | 100
   coinsEarned: null,     // { amount, streakBonus } | null
+  tierReward: null,      // tier reward object from TIER_REWARDS | null
 
   hydrate(cat, emotionalState, hasWrittenToday) {
     set({ cat, emotionalState, hasWrittenToday })
   },
 
-  onJournalSubmitted(updatedCat, milestone, coinsEarned = 0, streakBonus = 0) {
+  onJournalSubmitted(updatedCat, milestone, coinsEarned = 0, streakBonus = 0, tierReward = null) {
     const intimacy = updatedCat?.intimacy ?? 0
     // After writing, always feel happy → pick a joyful animation
     const joyful =
@@ -35,11 +36,16 @@ const useCatStore = create((set, get) => ({
       playAnimation: anim,
       milestone: milestone ?? null,
       coinsEarned: coinsEarned > 0 ? { amount: coinsEarned, streakBonus } : null,
+      tierReward: tierReward ?? null,
     })
   },
 
   clearCoinsEarned() {
     set({ coinsEarned: null })
+  },
+
+  clearTierReward() {
+    set({ tierReward: null })
   },
 
   // Optimistically add coins while user fills in the journal form.
@@ -70,13 +76,9 @@ const useCatStore = create((set, get) => ({
       const res = await fetch('/api/cat/feed', { method: 'POST' })
       if (res.ok) {
         const data = await res.json()
-        // Use full cat object from response (includes updated intimacy)
-        if (data.cat) {
-          set({ cat: data.cat })
-        } else {
-          // Fallback: patch just foodCount
-          set({ cat: { ...cat, foodCount: data.foodCount } })
-        }
+        if (data.cat) set({ cat: data.cat })
+        else          set({ cat: { ...cat, foodCount: data.foodCount } })
+        if (data.tierReward) set({ tierReward: data.tierReward })
       }
     } catch {
       // silent fail — animation already fired
@@ -122,6 +124,7 @@ const useCatStore = create((set, get) => ({
       }
       const data = await res.json()
       if (data.cat) set({ cat: data.cat })
+      if (data.tierReward) set({ tierReward: data.tierReward })
       return { success: true, ...data }
     } catch {
       return { success: false, error: 'Network error' }

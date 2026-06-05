@@ -10,6 +10,7 @@ import StreakCounter from '@/components/Journal/StreakCounter'
 import JournalForm from '@/components/Journal/JournalForm'
 import BottomNav from '@/components/shared/BottomNav'
 import MilestoneModal from '@/components/shared/MilestoneModal'
+import IntimacyRewardModal from '@/components/shared/IntimacyRewardModal'
 import ShareModal from '@/components/shared/ShareModal'
 import SeasonalBanner from '@/components/Seasonal/SeasonalBanner'
 
@@ -20,8 +21,8 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
 
   const {
     cat, emotionalState, hasWrittenToday,
-    playAnimation, milestone,
-    hydrate, onJournalSubmitted, clearAnimation, clearMilestone,
+    playAnimation, milestone, tierReward,
+    hydrate, onJournalSubmitted, clearAnimation, clearMilestone, clearTierReward,
   } = useCatStore()
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
     }
 
     const data = await res.json()
-    onJournalSubmitted(data.cat, data.milestone, data.coinsEarned ?? 0, data.streakBonus ?? 0)
+    onJournalSubmitted(data.cat, data.milestone, data.coinsEarned ?? 0, data.streakBonus ?? 0, data.tierReward ?? null)
 
     // cat_animation_viewed 이벤트 비동기 기록
     void fetch('/api/events', {
@@ -125,6 +126,12 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
         catColor={activeCat?.color}
         catStage={activeCat?.stage}
         onClose={clearMilestone}
+      />
+
+      <IntimacyRewardModal
+        reward={tierReward}
+        cat={activeCat}
+        onClose={clearTierReward}
       />
 
       {showShare && (

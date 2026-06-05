@@ -85,6 +85,7 @@ model Cat {
   foodCount        Int       @default(0)   // purchased with coins
   intimacy         Int       @default(0)   // 0-100: bond level, grows via journal + feeding
   inventory        Json      @default("{}")  // { combs, shampoos, yarns, mice, cushions, houses, vitamins, omega3s }
+  rewardedTier     Int       @default(0)     // highest intimacy tier for which reward was already given (0=shy)
   createdAt        DateTime  @default(now())
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

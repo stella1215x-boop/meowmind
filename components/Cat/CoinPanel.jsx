@@ -199,24 +199,37 @@ export default function CoinPanel() {
           {/* Items for active category */}
           <div className="divide-y divide-gray-50">
             {getByCategory(activeTab).map(item => {
-              const affordable = coins >= item.cost
-              const owned      = item.type === 'permanent' &&
-                                 normalizeInventory(cat?.inventory)[item.inventoryKey] >= 1
+              const catIntimacy = cat?.intimacy ?? 0
+              const isLocked    = (item.minIntimacy ?? 0) > catIntimacy
+              const affordable  = !isLocked && coins >= item.cost
+              const owned       = item.type === 'permanent' &&
+                                  normalizeInventory(cat?.inventory)[item.inventoryKey] >= 1
 
               return (
-                <div key={item.id} className="flex items-center gap-3 px-4 py-3">
-                  <span className="text-2xl flex-shrink-0">{item.emoji}</span>
+                <div key={item.id}
+                  className={`flex items-center gap-3 px-4 py-3 ${isLocked ? 'opacity-50' : ''}`}>
+                  <span className="text-2xl flex-shrink-0">{isLocked ? '🔒' : item.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-gray-700">{item.name}</p>
-                    <p className="text-xs text-gray-400">{item.desc}</p>
-                    {item.intimacyGain > 0 && (
-                      <p className="text-[10px] text-lavender font-semibold mt-0.5">
-                        사용 시 친밀도 +{item.intimacyGain}
-                      </p>
+                    {isLocked ? (
+                      <p className="text-xs text-gray-400">친밀도 {item.minIntimacy} 달성 시 해금 🔓</p>
+                    ) : (
+                      <>
+                        <p className="text-xs text-gray-400">{item.desc}</p>
+                        {item.intimacyGain > 0 && (
+                          <p className="text-[10px] text-lavender font-semibold mt-0.5">
+                            사용 시 친밀도 +{item.intimacyGain}
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
                   {owned ? (
                     <span className="text-xs font-bold text-mint px-2 py-1 bg-mint/10 rounded-lg">소장 ✓</span>
+                  ) : isLocked ? (
+                    <span className="text-xs text-gray-300 px-2 py-1 bg-gray-50 rounded-lg border border-gray-100">
+                      🔒
+                    </span>
                   ) : (
                     <button
                       onClick={() => handleBuy(item)}
@@ -232,6 +245,7 @@ export default function CoinPanel() {
                 </div>
               )
             })}
+
           </div>
 
           {/* Footer hint */}

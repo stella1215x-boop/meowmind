@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma'
 import { tagMood } from '@/lib/insightsService'
 import { calcStage, MILESTONES } from '@/lib/catGrowthService'
 import { calculateStreakUpdate } from '@/lib/streakService'
+import { checkTierReward } from '@/lib/tierRewardService'
 
 // GET: 일지 목록 (히스토리 페이지에서 사용)
 export async function GET(req) {
@@ -84,6 +85,10 @@ export async function POST(req) {
   // Intimacy: +5 per journal entry, capped at 100
   const newIntimacy = Math.min((cat?.intimacy ?? 0) + 5, 100)
 
+  // Check if crossing into a new intimacy tier
+  const tierResult = checkTierReward(newIntimacy, cat?.rewardedTier ?? 0)
+  const tierBonus  = tierResult?.bonusCoins ?? 0
+
   const [entry, updatedCat] = await prisma.$transaction(async (tx) => {
     const content = JSON.stringify({
       sentences,
@@ -100,8 +105,9 @@ export async function POST(req) {
         longestStreak: newLongest,
         stage: newStage,
         lastFedAt: new Date(),
-        coins: newCoins,
+        coins: newCoins + tierBonus,
         intimacy: newIntimacy,
+        ...(tierResult && { rewardedTier: tierResult.newRewardedTier }),
       },
     })
     return [e, c]
@@ -117,8 +123,9 @@ export async function POST(req) {
     entry,
     cat: updatedCat,
     milestone: isMilestone,
-    coinsEarned: totalCoinsEarned,
+    coinsEarned: totalCoinsEarned + tierBonus,
     streakBonus,
+    tierReward: tierResult?.reward ?? null,
   }, { status: 201 })
 }
 
