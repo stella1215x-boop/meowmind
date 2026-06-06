@@ -1,8 +1,24 @@
 {
   "crons": [
     {
+      "comment": "Journal reminder — runs every hour, matches user's chosen reminderTime",
       "path": "/api/cron/notify",
-      "schedule": "0 12 * * *"
+      "schedule": "0 * * * *"
+    },
+    {
+      "comment": "Hungry cat alert — 08:00 KST (23:00 UTC)",
+      "path": "/api/cron/hungry",
+      "schedule": "0 23 * * *"
+    },
+    {
+      "comment": "Hungry cat alert — 12:00 KST (03:00 UTC)",
+      "path": "/api/cron/hungry",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "comment": "Hungry cat alert — 19:00 KST (10:00 UTC)",
+      "path": "/api/cron/hungry",
+      "schedule": "0 10 * * *"
     }
   ]
 }
