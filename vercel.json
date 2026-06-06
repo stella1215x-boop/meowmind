@@ -1,9 +1,9 @@
 {
   "crons": [
     {
-      "comment": "Journal reminder — runs every hour, matches user's chosen reminderTime",
+      "comment": "Journal reminder — 21:00 KST (12:00 UTC) daily",
       "path": "/api/cron/notify",
-      "schedule": "0 * * * *"
+      "schedule": "0 12 * * *"
     },
     {
       "comment": "Hungry cat alert — 08:00 KST (23:00 UTC)",
