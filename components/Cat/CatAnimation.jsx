@@ -39,14 +39,14 @@ export default function CatAnimation({ cat, emotionalState, playAnimation, onAni
   }
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      {/* Tappable cat */}
+    <div className="flex flex-col items-center w-full h-full">
+      {/* Tappable cat — fills the 37vh container set by HomeClient */}
       <button
         onClick={handleTap}
         disabled={isBusy}
         aria-label={`Pet ${cat?.name ?? 'cat'}`}
-        className={`rounded-full transition-transform duration-100 select-none focus:outline-none
-          ${isBusy ? 'cursor-default' : 'cursor-pointer active:scale-90 hover:scale-105'}`}
+        className={`flex-1 w-full transition-transform duration-100 select-none focus:outline-none
+          ${isBusy ? 'cursor-default' : 'cursor-pointer active:scale-95 hover:scale-[1.02]'}`}
         style={{ background: 'transparent', WebkitAppearance: 'none', border: 'none', padding: 0 }}
       >
         <CatRiveCharacter
@@ -57,18 +57,18 @@ export default function CatAnimation({ cat, emotionalState, playAnimation, onAni
         />
       </button>
 
-      {/* Name + stage */}
-      <div className="text-center space-y-0.5 mt-1">
-        <h2 className="text-2xl font-extrabold text-gray-700">{cat?.name}</h2>
-        <p className="text-sm text-gray-400 font-medium">{getStageLabel(cat?.stage)}</p>
+      {/* Name + stage + intimacy — compact, below the cat */}
+      <div className="flex-shrink-0 text-center mt-1">
+        <h2 className="text-xl font-extrabold text-gray-700">{cat?.name}</h2>
+        <p className="text-xs text-gray-400 font-medium">{getStageLabel(cat?.stage)}</p>
       </div>
 
-      {/* Intimacy meter */}
-      <IntimacyMeter intimacy={intimacy} />
+      <div className="flex-shrink-0 mt-1">
+        <IntimacyMeter intimacy={intimacy} />
+      </div>
 
-      {/* Tap hint — fades after first tap */}
       {!hasTapped && (
-        <p className="text-[10px] text-gray-300 -mt-1 select-none animate-pulse">
+        <p className="flex-shrink-0 text-[10px] text-gray-300 mt-0.5 select-none animate-pulse">
           {tapHint}
         </p>
       )}

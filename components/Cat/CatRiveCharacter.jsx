@@ -46,12 +46,7 @@ const ANIM_SPEECH = {
   stretch:  '*big yawn* 😪',
 }
 
-// Stage-based scale factor: kitten is 85% of full size, legendary is 100%
-// The CSS size expression resolves to ~1/3 of screen height on any phone.
-const STAGE_SCALE = [0.85, 0.88, 0.91, 0.94, 0.97, 1.0]
-const CAT_CSS_BASE = 'min(33vh, 80vw)'   // responsive: 1/3 screen height, max 80% width
-
-// Numeric fallback used only for the SVG fallback (CatSvg needs a px number)
+// Numeric sizes for the SVG fallback only — Rive fills its parent container
 const DISPLAY_SIZE_PX = [260, 270, 280, 290, 296, 300]
 
 export default function CatRiveCharacter({
@@ -68,12 +63,9 @@ export default function CatRiveCharacter({
   const bubbleTimerRef = useRef(null)
   const safetyTimerRef = useRef(null)
 
-  const stage    = Math.min(cat?.stage ?? 0, 5)
-  const sizePx   = DISPLAY_SIZE_PX[stage]   // numeric, for SVG fallback only
-  const scale    = STAGE_SCALE[stage]
-  // CSS size: responsive viewport expression + stage scale factor
-  const catCss   = `calc(${CAT_CSS_BASE} * ${scale})`
-  const color    = cat?.color ?? 'orange'
+  const stage  = Math.min(cat?.stage ?? 0, 5)
+  const sizePx = DISPLAY_SIZE_PX[stage]   // numeric, for SVG fallback only
+  const color  = cat?.color ?? 'orange'
   const intimacy = cat?.intimacy ?? 0
   const tier     = getIntimacyTier(intimacy)
   const svgMood  = getSvgMood(emotionalState, intimacy)
@@ -181,8 +173,8 @@ export default function CatRiveCharacter({
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="relative flex flex-col items-center"
-      style={{ width: catCss, background: 'transparent' }}>
+    {/* Fill the parent container — parent (HomeClient) controls the size */}
+    <div className="relative flex flex-col items-center w-full h-full">
 
       {stage >= 5 && (
         <div className="absolute z-10 text-2xl select-none drop-shadow"
@@ -209,19 +201,19 @@ export default function CatRiveCharacter({
           style={{ left: `${h.left}%`, top: -16, animationDelay: `${h.delay}s` }}>❤️</span>
       ))}
 
-      {/* Cat — Rive canvas or SVG fallback */}
+      {/* Cat — fills parent height; parent (HomeClient) is 37vh */}
       <div
-        style={{ width: catCss, height: catCss, filter: `drop-shadow(${tier.glow})` }}
-        className={!hasGreeted && !riveError ? 'animate-cat-greet' : ''}
+        className={`flex-1 w-full ${!hasGreeted && !riveError ? 'animate-cat-greet' : ''}`}
+        style={{ filter: `drop-shadow(${tier.glow})` }}
       >
         {riveError ? (
-          <CatSvg stage={stage} color={color} mood={svgMood} size={sizePx} className="select-none w-full h-full" />
+          <CatSvg stage={stage} color={color} mood={svgMood} size={sizePx} className="select-none w-full h-full object-contain" />
         ) : (
           <RiveComponent style={{ width: '100%', height: '100%' }} />
         )}
       </div>
 
-      <div className={`mt-2 px-3 py-0.5 rounded-full text-xs font-semibold
+      <div className={`flex-shrink-0 mb-1 px-3 py-0.5 rounded-full text-xs font-semibold
                        transition-all duration-500 ${tier.badgeCls}`}>
         {tier.emoji} {tier.label}
       </div>
