@@ -46,7 +46,13 @@ const ANIM_SPEECH = {
   stretch:  '*big yawn* 😪',
 }
 
-const DISPLAY_SIZE = [90, 108, 128, 150, 168, 188]
+// Stage-based scale factor: kitten is 85% of full size, legendary is 100%
+// The CSS size expression resolves to ~1/3 of screen height on any phone.
+const STAGE_SCALE = [0.85, 0.88, 0.91, 0.94, 0.97, 1.0]
+const CAT_CSS_BASE = 'min(33vh, 80vw)'   // responsive: 1/3 screen height, max 80% width
+
+// Numeric fallback used only for the SVG fallback (CatSvg needs a px number)
+const DISPLAY_SIZE_PX = [260, 270, 280, 290, 296, 300]
 
 export default function CatRiveCharacter({
   cat,
@@ -63,7 +69,10 @@ export default function CatRiveCharacter({
   const safetyTimerRef = useRef(null)
 
   const stage    = Math.min(cat?.stage ?? 0, 5)
-  const size     = DISPLAY_SIZE[stage]
+  const sizePx   = DISPLAY_SIZE_PX[stage]   // numeric, for SVG fallback only
+  const scale    = STAGE_SCALE[stage]
+  // CSS size: responsive viewport expression + stage scale factor
+  const catCss   = `calc(${CAT_CSS_BASE} * ${scale})`
   const color    = cat?.color ?? 'orange'
   const intimacy = cat?.intimacy ?? 0
   const tier     = getIntimacyTier(intimacy)
@@ -173,7 +182,7 @@ export default function CatRiveCharacter({
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="relative flex flex-col items-center"
-      style={{ width: size, minHeight: size + 64, background: 'transparent' }}>
+      style={{ width: catCss, background: 'transparent' }}>
 
       {stage >= 5 && (
         <div className="absolute z-10 text-2xl select-none drop-shadow"
@@ -202,11 +211,11 @@ export default function CatRiveCharacter({
 
       {/* Cat — Rive canvas or SVG fallback */}
       <div
-        style={{ width: size, height: size, filter: `drop-shadow(${tier.glow})` }}
+        style={{ width: catCss, height: catCss, filter: `drop-shadow(${tier.glow})` }}
         className={!hasGreeted && !riveError ? 'animate-cat-greet' : ''}
       >
         {riveError ? (
-          <CatSvg stage={stage} color={color} mood={svgMood} size={size} className="select-none" />
+          <CatSvg stage={stage} color={color} mood={svgMood} size={sizePx} className="select-none w-full h-full" />
         ) : (
           <RiveComponent style={{ width: '100%', height: '100%' }} />
         )}

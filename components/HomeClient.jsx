@@ -95,7 +95,7 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
         </div>
 
         {/* 고양이 애니메이션 + 감정 상태 */}
-        <div className="flex flex-col items-center gap-3 mb-4">
+        <div className="flex flex-col items-center gap-3 mb-6 mt-2">
           <CatAnimation
             cat={activeCat}
             emotionalState={activeState}
