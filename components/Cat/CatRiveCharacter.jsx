@@ -172,8 +172,8 @@ export default function CatRiveCharacter({
   }, [])
 
   // ── Render ────────────────────────────────────────────────────────────────
+  // Fill the parent container — parent (HomeClient) controls the size
   return (
-    {/* Fill the parent container — parent (HomeClient) controls the size */}
     <div className="relative flex flex-col items-center w-full h-full">
 
       {stage >= 5 && (
