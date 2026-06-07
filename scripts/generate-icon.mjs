@@ -1,0 +1,146 @@
+// Generates all PWA icon sizes from an SVG template
+// Run: node scripts/generate-icon.mjs
+
+import sharp from 'sharp'
+import { writeFileSync } from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const OUT_DIR = path.join(__dirname, '../public/icons')
+
+// ── Icon SVG design ──────────────────────────────────────────────────────────
+// Orange tabby cat with green sprout, sticker style, purple gradient bg
+// Warm cream bg, gray tabby cat with sunglasses + green sprout, pink heart
+const SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="creamBg" cx="40%" cy="35%" r="80%">
+      <stop offset="0%" stop-color="#FFF8F2"/>
+      <stop offset="100%" stop-color="#FFE8D6"/>
+    </radialGradient>
+    <radialGradient id="catFace" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#E2E8F0"/>
+      <stop offset="100%" stop-color="#B8C4D0"/>
+    </radialGradient>
+    <radialGradient id="catChest" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F1F5F9"/>
+    </radialGradient>
+    <filter id="softShadow">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="rgba(180,130,100,0.25)"/>
+    </filter>
+  </defs>
+
+  <!-- Cream background -->
+  <rect width="512" height="512" rx="110" ry="110" fill="url(#creamBg)"/>
+
+  <!-- Subtle warm glow circle -->
+  <circle cx="256" cy="290" r="195" fill="rgba(255,210,180,0.18)"/>
+
+  <!-- ── CAT (gray tabby, sunglasses, sprout) ── -->
+  <g filter="url(#softShadow)">
+
+    <!-- Ears -->
+    <polygon points="142,220 160,130 222,200" fill="#C8D3DC"/>
+    <polygon points="370,220 352,130 290,200" fill="#C8D3DC"/>
+    <!-- Ear inner pink -->
+    <polygon points="158,210 172,148 214,196" fill="#F9A8C9"/>
+    <polygon points="354,210 340,148 298,196" fill="#F9A8C9"/>
+
+    <!-- Cat face circle -->
+    <circle cx="256" cy="300" r="155" fill="url(#catFace)"/>
+
+    <!-- Gray tabby stripe marks on forehead -->
+    <path d="M210 210 Q222 196 234 210" stroke="#94A3B8" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <path d="M244 204 Q256 188 268 204" stroke="#94A3B8" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <path d="M278 210 Q290 196 302 210" stroke="#94A3B8" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+    <!-- White chest patch -->
+    <ellipse cx="256" cy="355" rx="80" ry="85" fill="url(#catChest)"/>
+
+    <!-- ── SUNGLASSES ── -->
+    <!-- Frame bridge -->
+    <rect x="220" y="268" width="72" height="3" rx="2" fill="#1E293B"/>
+    <!-- Left lens -->
+    <rect x="142" y="252" width="80" height="52" rx="20" fill="#1E293B"/>
+    <!-- Right lens -->
+    <rect x="290" y="252" width="80" height="52" rx="20" fill="#1E293B"/>
+    <!-- Lens shine left -->
+    <ellipse cx="170" cy="266" rx="16" ry="10" fill="rgba(255,255,255,0.18)" transform="rotate(-15 170 266)"/>
+    <!-- Lens shine right -->
+    <ellipse cx="318" cy="266" rx="16" ry="10" fill="rgba(255,255,255,0.18)" transform="rotate(-15 318 266)"/>
+    <!-- Frame arms -->
+    <path d="M142 268 Q110 268 108 280" stroke="#1E293B" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <path d="M370 268 Q402 268 404 280" stroke="#1E293B" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+    <!-- Nose -->
+    <path d="M246 320 L256 330 L266 320 Q256 314 246 320Z" fill="#F472B6"/>
+    <!-- Mouth - happy curve -->
+    <path d="M256 330 Q240 348 228 342" stroke="#F472B6" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M256 330 Q272 348 284 342" stroke="#F472B6" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+    <!-- Cheek blush -->
+    <ellipse cx="178" cy="325" rx="28" ry="18" fill="#FCA5A5" opacity="0.45"/>
+    <ellipse cx="334" cy="325" rx="28" ry="18" fill="#FCA5A5" opacity="0.45"/>
+
+    <!-- Whiskers -->
+    <line x1="108" y1="318" x2="232" y2="322" stroke="#94A3B8" stroke-width="3.5" stroke-linecap="round" opacity="0.8"/>
+    <line x1="110" y1="334" x2="232" y2="332" stroke="#94A3B8" stroke-width="3.5" stroke-linecap="round" opacity="0.7"/>
+    <line x1="404" y1="318" x2="280" y2="322" stroke="#94A3B8" stroke-width="3.5" stroke-linecap="round" opacity="0.8"/>
+    <line x1="402" y1="334" x2="280" y2="332" stroke="#94A3B8" stroke-width="3.5" stroke-linecap="round" opacity="0.7"/>
+  </g>
+
+  <!-- ── Green sprout on head ── -->
+  <g transform="translate(256,148)">
+    <line x1="0" y1="4" x2="0" y2="-28" stroke="#16A34A" stroke-width="8" stroke-linecap="round"/>
+    <ellipse cx="-16" cy="-34" rx="18" ry="11" fill="#22C55E" transform="rotate(-40,-16,-34)"/>
+    <ellipse cx="16" cy="-34" rx="18" ry="11" fill="#16A34A" transform="rotate(40,16,-34)"/>
+  </g>
+
+  <!-- ── Heart bottom-right ── -->
+  <g transform="translate(386,398)">
+    <path d="M0,-18 C4,-26 20,-26 20,-12 C20,2 0,18 0,18 C0,18 -20,2 -20,-12 C-20,-26 -4,-26 0,-18Z"
+          fill="#FB7185" opacity="0.95"/>
+    <path d="M0,-14 C3,-20 15,-20 15,-10 C15,0 0,14 0,14 C0,14 -15,0 -15,-10 C-15,-20 -3,-20 0,-14Z"
+          fill="#FDA4AF"/>
+  </g>
+</svg>
+`
+
+const SIZES = [16, 32, 72, 96, 128, 144, 152, 180, 192, 384, 512]
+
+async function generate() {
+  const svgBuf = Buffer.from(SVG)
+  console.log('Generating MeowMind icons...\n')
+
+  for (const size of SIZES) {
+    const out = path.join(OUT_DIR, `icon-${size}x${size}.png`)
+    await sharp(svgBuf)
+      .resize(size, size)
+      .png({ quality: 100 })
+      .toFile(out)
+    console.log(`✓  icon-${size}x${size}.png`)
+  }
+
+  // Maskable icon — add extra padding (safe zone)
+  const maskableSvg = SVG.replace(
+    'rx="112" ry="112"',
+    'rx="0" ry="0"'  // full bleed for maskable
+  ).replace(
+    '<rect width="512" height="512" rx="112" ry="112" fill="url(#bg)"/>',
+    '<rect width="512" height="512" fill="url(#bg)"/>'  // no corner radius
+  )
+  await sharp(Buffer.from(maskableSvg))
+    .resize(512, 512)
+    .png({ quality: 100 })
+    .toFile(path.join(OUT_DIR, 'icon-maskable-512x512.png'))
+  console.log('✓  icon-maskable-512x512.png')
+
+  // Also save base SVG for reference
+  writeFileSync(path.join(OUT_DIR, 'icon.svg'), SVG)
+  console.log('✓  icon.svg\n')
+  console.log('All icons generated! ✅')
+}
+
+generate().catch(console.error)
