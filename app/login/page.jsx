@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
+import { useLanguage, LanguageSwitcher } from '@/components/shared/LanguageProvider'
 
 export default function LoginPage() {
   return (
@@ -14,6 +15,9 @@ export default function LoginPage() {
 
 function LoginPageInner() {
   const searchParams = useSearchParams()
+  const { t } = useLanguage()
+  const L = t.login
+
   const [mode, setMode] = useState('login') // 'login' | 'register'
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
@@ -37,25 +41,19 @@ function LoginPageInner() {
   async function handleLogin(e) {
     e.preventDefault()
     reset()
-    if (!email || !password) { setError('이메일과 비밀번호를 입력해주세요.'); return }
+    if (!email || !password) { setError(L.errEmail); return }
     setLoading(true)
-    const res = await signIn('credentials', {
-      email, password, redirect: false,
-    })
+    const res = await signIn('credentials', { email, password, redirect: false })
     setLoading(false)
-    if (res?.ok) {
-      window.location.href = '/'
-    } else {
-      setError('이메일 또는 비밀번호가 일치하지 않아요.')
-    }
+    if (res?.ok) { window.location.href = '/' }
+    else { setError(L.errLogin) }
   }
 
-  /* ── Register ── */
   async function handleRegister(e) {
     e.preventDefault()
     reset()
-    if (!email || !password) { setError('이메일과 비밀번호를 입력해주세요.'); return }
-    if (password.length < 6) { setError('비밀번호는 6자 이상이어야 해요.'); return }
+    if (!email || !password) { setError(L.errEmail); return }
+    if (password.length < 6) { setError(L.errPassword); return }
     setLoading(true)
     try {
       const res = await fetch('/api/auth/register', {
@@ -64,25 +62,14 @@ function LoginPageInner() {
         body: JSON.stringify({ email, password, name }),
       })
       const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || '회원가입에 실패했어요.')
-        setLoading(false)
-        return
-      }
-      // Auto-login after successful registration
-      const loginRes = await signIn('credentials', {
-        email, password, redirect: false,
-      })
+      if (!res.ok) { setError(data.error || L.errGeneric); setLoading(false); return }
+      const loginRes = await signIn('credentials', { email, password, redirect: false })
       setLoading(false)
-      if (loginRes?.ok) {
-        window.location.href = '/'
-      } else {
-        setSuccess('가입 완료! 로그인해 주세요.')
-        switchMode('login')
-      }
+      if (loginRes?.ok) { window.location.href = '/' }
+      else { setSuccess(L.successReg); switchMode('login') }
     } catch {
       setLoading(false)
-      setError('네트워크 오류가 발생했어요.')
+      setError(L.errNetwork)
     }
   }
 
@@ -114,31 +101,25 @@ function LoginPageInner() {
 
           <h1 className="text-3xl font-extrabold text-gray-700 tracking-tight">MeowMind</h1>
           <p className="text-gray-400 mt-2 text-sm font-medium leading-relaxed">
-            고양이와 함께 하루를 기록해요 🐱
+            {L.subtitle}
           </p>
+          {/* Language switcher */}
+          <div className="flex justify-center mt-3">
+            <LanguageSwitcher />
+          </div>
         </div>
 
         {/* Tab switcher */}
         <div className="flex bg-gray-100 rounded-2xl p-1 mb-5">
-          <button
-            onClick={() => switchMode('login')}
+          <button onClick={() => switchMode('login')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              mode === 'login'
-                ? 'bg-white text-gray-700 shadow-sm'
-                : 'text-gray-400'
-            }`}
-          >
-            로그인
+              mode === 'login' ? 'bg-white text-gray-700 shadow-sm' : 'text-gray-400'}`}>
+            {L.tabLogin}
           </button>
-          <button
-            onClick={() => switchMode('register')}
+          <button onClick={() => switchMode('register')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              mode === 'register'
-                ? 'bg-white text-gray-700 shadow-sm'
-                : 'text-gray-400'
-            }`}
-          >
-            회원가입
+              mode === 'register' ? 'bg-white text-gray-700 shadow-sm' : 'text-gray-400'}`}>
+            {L.tabRegister}
           </button>
         </div>
 
@@ -146,35 +127,22 @@ function LoginPageInner() {
         <form onSubmit={mode === 'login' ? handleLogin : handleRegister} className="space-y-3">
 
           {mode === 'register' && (
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="닉네임 (선택)"
-              className="w-full border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-700
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+              placeholder={L.nickname}
+                className="w-full border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-700
                          placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white"
             />
           )}
 
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="이메일 주소"
-            required
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder={L.email} required
             className="w-full border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-700
-                       placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white"
-          />
+                       placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white" />
 
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder={mode === 'register' ? '비밀번호 (6자 이상)' : '비밀번호'}
-            required
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+            placeholder={mode === 'register' ? L.passwordNew : L.password} required
             className="w-full border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-700
-                       placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white"
-          />
+                       placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white" />
 
           {error   && <p className="text-red-400 text-xs px-1">{error}</p>}
           {success && <p className="text-green-500 text-xs px-1">{success}</p>}
@@ -187,14 +155,14 @@ function LoginPageInner() {
                        hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
           >
             {loading
-              ? (mode === 'login' ? '로그인 중...' : '가입 중...')
-              : (mode === 'login' ? '로그인' : '회원가입')
+              ? L.loading[mode === 'login' ? 'login' : 'register']
+              : (mode === 'login' ? L.btnLogin : L.btnRegister)
             }
           </button>
         </form>
 
         <p className="text-center text-xs text-gray-400 mt-8 leading-relaxed">
-          계속하면 서비스 이용약관 및 개인정보 처리방침에<br/>동의하게 됩니다.
+          {L.terms}
         </p>
       </div>
     </div>

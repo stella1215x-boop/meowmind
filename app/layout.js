@@ -1,7 +1,9 @@
 import { Nunito } from 'next/font/google'
+import { headers } from 'next/headers'
 import './globals.css'
 import SessionProviderWrapper from '@/components/shared/SessionProviderWrapper'
 import InstallPrompt from '@/components/shared/InstallPrompt'
+import { LanguageProvider } from '@/components/shared/LanguageProvider'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
@@ -50,23 +52,25 @@ export const viewport = {
 
 export default async function RootLayout({ children }) {
   let session = null
-  try {
-    session = await getServerSession(authOptions)
-  } catch {
-    // DB 연결 전이거나 providers 없을 때 — layout은 계속 렌더링
-  }
+  try { session = await getServerSession(authOptions) } catch {}
+
+  // Detect locale from middleware header
+  const headersList = headers()
+  const locale = headersList.get('x-locale') ?? 'ko'
+  const htmlLang = { ko: 'ko', en: 'en', ja: 'ja' }[locale] ?? 'ko'
 
   return (
-    <html lang="ko" className={nunito.variable}>
+    <html lang={htmlLang} className={nunito.variable}>
       <head>
-        {/* iOS splash screen (기본) */}
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png" />
       </head>
       <body className="font-nunito bg-cream antialiased overscroll-none">
         <SessionProviderWrapper session={session}>
-          {children}
-          <InstallPrompt />
+          <LanguageProvider initialLocale={locale}>
+            {children}
+            <InstallPrompt />
+          </LanguageProvider>
         </SessionProviderWrapper>
       </body>
     </html>
