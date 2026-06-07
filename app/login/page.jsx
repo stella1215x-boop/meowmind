@@ -91,16 +91,35 @@ function LoginPageInner() {
       <div className="w-full max-w-sm">
 
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="text-7xl mb-4">🐱</div>
-          <h1 className="text-3xl font-bold text-gray-700">MeowMind</h1>
-          <p className="text-gray-500 mt-2 text-sm">
-            고양이와 함께 하루를 기록해요
+        <div className="text-center mb-10">
+          {/* Heart icon — warm, cute, simple */}
+          <div className="flex justify-center mb-5">
+            <div className="w-24 h-24 rounded-3xl bg-white shadow-lg shadow-pink-100
+                            flex items-center justify-center">
+              <svg viewBox="0 0 80 72" className="w-14 h-14" fill="none">
+                <path
+                  d="M40 64 C40 64 6 44 6 22 C6 12 14 4 24 4 C30 4 36 8 40 14 C44 8 50 4 56 4 C66 4 74 12 74 22 C74 44 40 64 40 64Z"
+                  fill="#FDA4AF"
+                />
+                <path
+                  d="M40 58 C40 58 10 40 10 22 C10 14 16 8 24 8 C30 8 36 12 40 18 C44 12 50 8 56 8 C64 8 70 14 70 22 C70 40 40 58 40 58Z"
+                  fill="#FB7185"
+                />
+                {/* Shine */}
+                <ellipse cx="26" cy="18" rx="7" ry="5"
+                  fill="rgba(255,255,255,0.35)" transform="rotate(-20 26 18)"/>
+              </svg>
+            </div>
+          </div>
+
+          <h1 className="text-3xl font-extrabold text-gray-700 tracking-tight">MeowMind</h1>
+          <p className="text-gray-400 mt-2 text-sm font-medium leading-relaxed">
+            고양이와 함께 하루를 기록해요 🐱
           </p>
         </div>
 
         {/* Tab switcher */}
-        <div className="flex bg-gray-100 rounded-2xl p-1 mb-6">
+        <div className="flex bg-gray-100 rounded-2xl p-1 mb-5">
           <button
             onClick={() => switchMode('login')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
@@ -132,7 +151,8 @@ function LoginPageInner() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="닉네임 (선택)"
-              className="w-full border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lavender bg-white"
+              className="w-full border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-700
+                         placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white"
             />
           )}
 
@@ -142,7 +162,8 @@ function LoginPageInner() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="이메일 주소"
             required
-            className="w-full border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lavender bg-white"
+            className="w-full border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-700
+                       placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white"
           />
 
           <input
@@ -151,7 +172,8 @@ function LoginPageInner() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder={mode === 'register' ? '비밀번호 (6자 이상)' : '비밀번호'}
             required
-            className="w-full border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lavender bg-white"
+            className="w-full border border-gray-200 rounded-2xl py-3.5 px-4 text-gray-700
+                       placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white"
           />
 
           {error   && <p className="text-red-400 text-xs px-1">{error}</p>}
@@ -160,7 +182,9 @@ function LoginPageInner() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-lavender text-white rounded-2xl py-3.5 font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-pink-400 to-rose-400 text-white
+                       rounded-2xl py-3.5 font-bold text-base shadow-md shadow-pink-200
+                       hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
           >
             {loading
               ? (mode === 'login' ? '로그인 중...' : '가입 중...')
@@ -169,8 +193,8 @@ function LoginPageInner() {
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-400 mt-8">
-          계속하면 서비스 이용약관 및 개인정보 처리방침에 동의하게 됩니다.
+        <p className="text-center text-xs text-gray-400 mt-8 leading-relaxed">
+          계속하면 서비스 이용약관 및 개인정보 처리방침에<br/>동의하게 됩니다.
         </p>
       </div>
     </div>
