@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server'
-import Stripe from 'stripe'
 import prisma from '@/lib/prisma'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '')
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key) return null
+  const Stripe = require('stripe')
+  return new Stripe(key)
+}
 
 export async function POST(req) {
-  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+  const stripe = getStripe()
+  if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
     return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 })
   }
 
@@ -14,7 +19,7 @@ export async function POST(req) {
 
   let event
   try {
-    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET)
+    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET ?? '')
   } catch (err) {
     return NextResponse.json({ error: `Webhook error: ${err.message}` }, { status: 400 })
   }

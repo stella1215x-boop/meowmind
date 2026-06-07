@@ -1,10 +1,15 @@
 import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
-import Stripe from 'stripe'
 import { authOptions } from '@/lib/auth'
 import { getPackage } from '@/lib/coinPackages'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '')
+// Lazy-init Stripe only when the key is available (avoids build errors)
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key) return null
+  const Stripe = require('stripe')
+  return new Stripe(key)
+}
 
 // POST /api/payment/checkout
 // Body: { packageId: 'coins_80' | 'coins_250' | 'coins_600' | 'coins_1400' }
@@ -13,9 +18,8 @@ export async function POST(req) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (!process.env.STRIPE_SECRET_KEY) {
-    return NextResponse.json({ error: 'Payment not configured' }, { status: 503 })
-  }
+  const stripe = getStripe()
+  if (!stripe) return NextResponse.json({ error: 'Payment not configured' }, { status: 503 })
 
   const { packageId } = await req.json()
   const pkg = getPackage(packageId)
