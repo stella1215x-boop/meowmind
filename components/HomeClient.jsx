@@ -14,7 +14,6 @@ import MilestoneModal from '@/components/shared/MilestoneModal'
 import IntimacyRewardModal from '@/components/shared/IntimacyRewardModal'
 import ShareButton from '@/components/shared/ShareButton'
 import SeasonalBanner from '@/components/Seasonal/SeasonalBanner'
-import { DAYS_PER_STAGE } from '@/lib/catGrowthService'
 
 export default function HomeClient({ cat: initialCat, emotionalState: initialState, hasWrittenToday: initialWritten, prompt, season, isPremium }) {
   const searchParams = useSearchParams()
@@ -34,11 +33,7 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
   const activeState   = cat ? emotionalState : initialState
   const activeWritten = cat ? hasWrittenToday : initialWritten
 
-  // Days progress toward next stage
-  const daysWritten  = activeCat?.totalDaysWritten ?? 0
-  const currentStage = activeCat?.stage ?? 0
-  const daysInStage  = daysWritten - currentStage * DAYS_PER_STAGE
-  const pctToNext    = Math.min(daysInStage / DAYS_PER_STAGE, 1)
+  const daysWritten = activeCat?.totalDaysWritten ?? 0
 
   async function handleJournalSubmit(sentences, followUpAnswer = null) {
     const res = await fetch('/api/journal', {
@@ -74,22 +69,10 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
         <SeasonalBanner season={season} isPremium={isPremium}
           catName={activeCat?.name} totalDaysWritten={daysWritten} />
 
-        {/* Streak + growth progress */}
-        <div className="flex items-center gap-2 mt-1">
-          <div className="flex-1">
-            <StreakCounter currentStreak={activeCat?.currentStreak ?? 0}
-              totalDaysWritten={daysWritten} />
-          </div>
-          {/* Days to next stage */}
-          <div className="text-right">
-            <p className="text-[10px] text-gray-400 font-medium">
-              Day {daysInStage}/{DAYS_PER_STAGE}
-            </p>
-            <div className="w-20 h-1.5 bg-gray-200 rounded-full mt-0.5 overflow-hidden">
-              <div className="h-full bg-lavender rounded-full transition-all"
-                style={{ width: `${pctToNext * 100}%` }} />
-            </div>
-          </div>
+        {/* Streak + cat growth — single row */}
+        <div className="mt-1">
+          <StreakCounter currentStreak={activeCat?.currentStreak ?? 0}
+            totalDaysWritten={daysWritten} />
         </div>
       </div>
 

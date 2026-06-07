@@ -4,9 +4,9 @@ import { useState } from 'react'
 import useCatStore from '@/store/useCatStore'
 
 const ACTIONS = [
-  { id: 'pet',   emoji: '🤚', label: 'Pet'   },
-  { id: 'talk',  emoji: '💬', label: 'Talk'  },
-  { id: 'brush', emoji: '🪮', label: 'Brush' },
+  { id: 'pet',   emoji: '🤚', label: '쓰다듬기' },
+  { id: 'talk',  emoji: '💬', label: '말 걸기'  },
+  { id: 'brush', emoji: '🪮', label: '빗질'     },
 ]
 
 export default function IntimacyPanel() {
@@ -71,7 +71,7 @@ export default function IntimacyPanel() {
                     ${isBusy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <span className="text-xl">💗</span>
-        <span className="text-[9px] font-bold text-white mt-0.5">Intimacy</span>
+        <span className="text-[9px] font-bold text-white mt-0.5">친밀도</span>
       </button>
     </div>
   )

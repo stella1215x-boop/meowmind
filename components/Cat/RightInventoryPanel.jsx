@@ -39,9 +39,10 @@ export default function RightInventoryPanel() {
                         flex flex-col items-center">
           <span className="text-base">🪙</span>
           <span className="text-xs font-extrabold text-yellow-600 leading-tight">{coins}</span>
+          <span className="text-[8px] text-yellow-500">코인</span>
         </div>
 
-        {/* Pantry button */}
+        {/* 보관함 button */}
         <button
           onClick={() => { setPantryOpen(v => !v); setShopOpen(false) }}
           className={`rounded-2xl px-2 py-2 flex flex-col items-center border
@@ -51,7 +52,7 @@ export default function RightInventoryPanel() {
               : 'bg-white/90 border-gray-200 shadow-sm'}`}
         >
           <span className="text-base">📦</span>
-          <span className="text-[9px] font-bold text-gray-600">Pantry</span>
+          <span className="text-[9px] font-bold text-gray-600">보관함</span>
           {ownedItems.length > 0 && (
             <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-pink-500
                              rounded-full text-[7px] text-white font-bold
@@ -61,7 +62,7 @@ export default function RightInventoryPanel() {
           )}
         </button>
 
-        {/* Shop button */}
+        {/* 상점 button */}
         <button
           onClick={() => { setShopOpen(v => !v); setPantryOpen(false) }}
           className={`rounded-2xl px-2 py-2 flex flex-col items-center border
@@ -71,7 +72,7 @@ export default function RightInventoryPanel() {
               : 'bg-white/90 border-gray-200 shadow-sm'}`}
         >
           <span className="text-base">🛒</span>
-          <span className="text-[9px] font-bold text-gray-600">Shop</span>
+          <span className="text-[9px] font-bold text-gray-600">상점</span>
         </button>
       </div>
 
@@ -82,9 +83,9 @@ export default function RightInventoryPanel() {
           <div className="absolute right-0 top-0 z-50 w-48
                           bg-white rounded-2xl shadow-2xl border border-gray-100
                           p-3 animate-milestone-pop">
-            <p className="text-xs font-extrabold text-gray-600 mb-2">📦 Pantry</p>
+            <p className="text-xs font-extrabold text-gray-600 mb-2">📦 보관함</p>
             {ownedItems.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-2">비어있어요</p>
+              <p className="text-xs text-gray-400 text-center py-2">아직 비어있어요</p>
             ) : (
               <div className="space-y-1.5">
                 {ownedItems.map((item, i) => (
