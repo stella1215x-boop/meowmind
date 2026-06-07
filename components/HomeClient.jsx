@@ -16,8 +16,10 @@ import ShareButton from '@/components/shared/ShareButton'
 import SeasonalBanner from '@/components/Seasonal/SeasonalBanner'
 
 export default function HomeClient({ cat: initialCat, emotionalState: initialState, hasWrittenToday: initialWritten, prompt, season, isPremium }) {
-  const searchParams = useSearchParams()
-  const isWelcome = searchParams.get('welcome') === '1'
+  const searchParams   = useSearchParams()
+  const isWelcome      = searchParams.get('welcome')  === '1'
+  const purchaseResult = searchParams.get('purchase')
+  const coinsAdded     = searchParams.get('coins')
 
   const {
     cat, emotionalState, hasWrittenToday,
@@ -63,6 +65,13 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
           <div className="mb-1.5 bg-lavender/10 rounded-xl p-2 text-center animate-milestone-pop">
             <p className="text-xs font-semibold text-lavender">
               🎉 {activeCat?.name}와 함께하는 첫날이에요!
+            </p>
+          </div>
+        )}
+        {purchaseResult === 'success' && coinsAdded && (
+          <div className="mb-1.5 bg-yellow-50 border border-yellow-200 rounded-xl p-2 text-center animate-milestone-pop">
+            <p className="text-sm font-extrabold text-yellow-600">
+              🪙 +{coinsAdded} 코인 충전 완료! 감사합니다 💕
             </p>
           </div>
         )}

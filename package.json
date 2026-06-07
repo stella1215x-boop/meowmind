@@ -19,6 +19,7 @@
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@rive-app/react-canvas": "^4.28.6",
+    "@stripe/stripe-js": "^9.7.0",
     "@types/pg": "^8.20.0",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.10.0",
@@ -32,6 +33,7 @@
     "react": "^18",
     "react-dom": "^18",
     "sharp": "^0.34.5",
+    "stripe": "^22.2.0",
     "web-push": "^3.6.7",
     "zustand": "^5.0.13"
   },

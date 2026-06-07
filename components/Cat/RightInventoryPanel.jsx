@@ -12,10 +12,15 @@ const CoinPanel = dynamic(() => import('./CoinPanel'), {
   loading: () => <div className="p-4 text-center text-xs text-gray-400">로딩 중…</div>,
 })
 
+const CoinPurchaseModal = dynamic(() => import('@/components/shared/CoinPurchaseModal'), {
+  ssr: false,
+})
+
 export default function RightInventoryPanel() {
   const { cat, feedCat, consumeItem, playAnimation } = useCatStore()
   const [pantryOpen,    setPantryOpen]    = useState(false)
   const [shopOpen,      setShopOpen]      = useState(false)
+  const [coinBuyOpen,   setCoinBuyOpen]   = useState(false)
   const [feeding,       setFeeding]       = useState(false)
   const [showReaction,  setShowReaction]  = useState(false)
   const [toast,         setToast]         = useState(null)
@@ -56,6 +61,9 @@ export default function RightInventoryPanel() {
 
   return (
     <>
+      {/* Coin purchase modal */}
+      {coinBuyOpen && <CoinPurchaseModal onClose={() => setCoinBuyOpen(false)} />}
+
       {/* Feeding emotion reaction — overlays the cat area */}
       <FeedingReaction
         tierKey={tierKey}
@@ -74,12 +82,16 @@ export default function RightInventoryPanel() {
       {/* ── Button column — emoji only, no text ── */}
       <div className="flex flex-col gap-2 items-center">
 
-        {/* 🪙 Coins */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl
-                        w-14 h-14 flex flex-col items-center justify-center gap-0.5">
+        {/* 🪙 Coins — tap to buy more */}
+        <button
+          onClick={() => setCoinBuyOpen(true)}
+          className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl
+                     w-14 h-14 flex flex-col items-center justify-center gap-0.5
+                     active:scale-90 transition-transform hover:border-yellow-400 hover:bg-yellow-100"
+        >
           <span className="text-2xl">🪙</span>
           <span className="text-[11px] font-extrabold text-yellow-600">{coins}</span>
-        </div>
+        </button>
 
         {/* 🐟 Pantry (fish = cat food storage) */}
         <button
