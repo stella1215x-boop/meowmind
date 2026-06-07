@@ -285,62 +285,78 @@ export default function ShareButton({ sentences: propSentences }) {
   }
 
   return (
-    <div className="relative flex justify-center">
+    <div className="flex justify-center">
 
+      {/* ── Centered modal overlay ── */}
       {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2
-                          bg-white rounded-2xl shadow-2xl border border-gray-100
-                          p-4 z-50 animate-milestone-pop w-[280px]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-5
+                        bg-black/40 backdrop-blur-sm"
+             onClick={() => setOpen(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm
+                          overflow-hidden animate-milestone-pop"
+               onClick={e => e.stopPropagation()}>
 
-            {/* Image preview */}
-            {loading && (
-              <div className="h-32 flex items-center justify-center text-gray-400 text-sm">
-                이미지 생성 중... ✨
-              </div>
-            )}
-            {preview && !loading && (
-              <img src={preview} alt="share preview"
-                className="w-full rounded-xl mb-3 shadow-sm" />
-            )}
+            {/* Image preview — scrollable if tall */}
+            <div className="max-h-[55vh] overflow-y-auto">
+              {loading && (
+                <div className="h-48 flex flex-col items-center justify-center gap-2 text-gray-400">
+                  <span className="text-3xl animate-pulse">✨</span>
+                  <span className="text-sm font-medium">카드 생성 중...</span>
+                </div>
+              )}
+              {preview && !loading && (
+                <img src={preview} alt="공유 카드 미리보기"
+                  className="w-full" />
+              )}
+            </div>
 
             {/* Share buttons */}
-            <div className="flex gap-3 justify-center">
-              {typeof navigator !== 'undefined' && navigator.share && (
-                <button onClick={() => doShare('native')} disabled={loading}
-                  className="flex flex-col items-center gap-1 active:scale-90 transition-transform">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-lavender to-pink-400
-                                  flex items-center justify-center shadow-md">
-                    <span className="text-2xl">📤</span>
+            <div className="p-5 border-t border-gray-100">
+              <p className="text-xs text-gray-400 text-center mb-4 font-medium">
+                공유할 플랫폼을 선택하세요
+              </p>
+              <div className="flex gap-4 justify-center">
+                {typeof navigator !== 'undefined' && navigator.share && (
+                  <button onClick={() => doShare('native')} disabled={loading}
+                    className="flex flex-col items-center gap-1.5 active:scale-90 transition-transform">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-lavender to-pink-400
+                                    flex items-center justify-center shadow-md">
+                      <span className="text-2xl">📤</span>
+                    </div>
+                    <span className="text-xs font-semibold text-gray-600">공유</span>
+                  </button>
+                )}
+
+                <button onClick={() => doShare('instagram')}
+                  className="flex flex-col items-center gap-1.5 active:scale-90 transition-transform">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-md"
+                    style={{ background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)' }}>
+                    <svg viewBox="0 0 24 24" className="w-8 h-8 fill-white">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                    </svg>
                   </div>
-                  <span className="text-[10px] font-semibold text-gray-500">공유</span>
+                  <span className="text-xs font-semibold text-gray-600">Instagram</span>
                 </button>
-              )}
 
-              <button onClick={() => doShare('instagram')}
-                className="flex flex-col items-center gap-1 active:scale-90 transition-transform">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-md"
-                  style={{ background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)' }}>
-                  <svg viewBox="0 0 24 24" className="w-7 h-7 fill-white">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
-                  </svg>
-                </div>
-                <span className="text-[10px] font-semibold text-gray-500">Instagram</span>
-              </button>
+                <button onClick={() => doShare('x')}
+                  className="flex flex-col items-center gap-1.5 active:scale-90 transition-transform">
+                  <div className="w-16 h-16 rounded-2xl bg-black flex items-center justify-center shadow-md">
+                    <svg viewBox="0 0 24 24" className="w-8 h-8 fill-white">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.264 5.633zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                  </div>
+                  <span className="text-xs font-semibold text-gray-600">X</span>
+                </button>
+              </div>
 
-              <button onClick={() => doShare('x')}
-                className="flex flex-col items-center gap-1 active:scale-90 transition-transform">
-                <div className="w-14 h-14 rounded-2xl bg-black flex items-center justify-center shadow-md">
-                  <svg viewBox="0 0 24 24" className="w-7 h-7 fill-white">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.264 5.633zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                  </svg>
-                </div>
-                <span className="text-[10px] font-semibold text-gray-500">X</span>
+              <button onClick={() => setOpen(false)}
+                className="mt-4 w-full py-2.5 rounded-2xl text-sm font-semibold
+                           text-gray-400 bg-gray-50 active:scale-95 transition-all">
+                닫기
               </button>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       <button
