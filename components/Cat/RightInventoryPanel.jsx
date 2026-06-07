@@ -69,7 +69,7 @@ export default function RightInventoryPanel() {
           <span className="text-[11px] font-extrabold text-yellow-600">{coins}</span>
         </div>
 
-        {/* 📦 Pantry */}
+        {/* 🐟 Pantry (fish = cat food storage) */}
         <button
           onClick={() => { setPantryOpen(v => !v); setShopOpen(false) }}
           className={`relative w-14 h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5
@@ -78,7 +78,7 @@ export default function RightInventoryPanel() {
               ? 'bg-lavender/30 border-lavender/50'
               : 'bg-white/90 border-gray-200 shadow-sm'}`}
         >
-          <span className="text-2xl">📦</span>
+          <span className="text-2xl">🐟</span>
           {totalItems > 0 && (
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-pink-500
                              rounded-full text-[9px] text-white font-bold
@@ -108,7 +108,7 @@ export default function RightInventoryPanel() {
           <div className="absolute right-0 top-0 z-50 w-52
                           bg-white rounded-2xl shadow-2xl border border-gray-100
                           p-3 animate-milestone-pop">
-            <p className="text-sm font-extrabold text-gray-600 mb-2">📦 보관함</p>
+            <p className="text-sm font-extrabold text-gray-600 mb-2">🐟 보관함</p>
 
             {totalItems === 0 ? (
               <p className="text-sm text-gray-400 text-center py-3">아직 비어있어요</p>
