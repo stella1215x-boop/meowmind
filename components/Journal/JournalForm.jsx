@@ -239,7 +239,7 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
       {/* ── Share button (shows after all 3 done, even if follow-up pending) ── */}
       {(allDone || phase === 'followup') && (
         <div className="pt-1">
-          <ShareButton cat={cat} sentences={sentences.filter(Boolean)} />
+          <ShareButton sentences={sentences.filter(Boolean)} />
         </div>
       )}
     </div>

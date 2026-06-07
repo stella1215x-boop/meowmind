@@ -137,7 +137,7 @@ function WrittenTodayMessage({ cat }) {
       <div className="w-full bg-mint/20 rounded-2xl p-3">
         <p className="text-xs text-gray-500">매일 꾸준히 10일 쓰면 {cat?.name}가 성장해요 🌱</p>
       </div>
-      <ShareButton cat={cat} sentences={[]} />
+      <ShareButton sentences={[]} />
     </div>
   )
 }
