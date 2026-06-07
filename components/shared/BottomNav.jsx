@@ -57,7 +57,7 @@ export default function BottomNav({ totalDaysWritten = 0 }) {
         <div className="flex">
           {NAV_ITEMS.map(({ href, label, icon }) => {
             const isActive = pathname === href
-            const isLocked = href === '/insights' && totalDaysWritten < 30
+            const isLocked = href === '/insights' && totalDaysWritten < 3
 
             return (
               <Link
