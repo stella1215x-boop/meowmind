@@ -48,6 +48,33 @@ const useCatStore = create((set, get) => ({
     set({ tierReward: null })
   },
 
+  // Intimacy actions: pet · talk · brush
+  async doInteract(action) {
+    if (get().playAnimation) return null
+    // Optimistic coin update
+    const COINS = { pet: 3, talk: 2, brush: 3 }
+    const ANIMS = { pet: 'purr', talk: 'nuzzle', brush: 'groom' }
+    const gained = COINS[action] ?? 2
+    const cat = get().cat
+    if (cat) set({ cat: { ...cat, coins: (cat.coins ?? 0) + gained } })
+    set({ playAnimation: ANIMS[action] ?? 'purr' })
+
+    try {
+      const res = await fetch('/api/cat/interact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.cat) set({ cat: data.cat })
+        if (data.tierReward) set({ tierReward: data.tierReward })
+        return data.coinsGained
+      }
+    } catch { /* silent */ }
+    return gained
+  },
+
   // Optimistically add coins while user fills in the journal form.
   // The final API response will overwrite the cat object anyway,
   // so any small discrepancy is self-correcting on submit.

@@ -57,21 +57,11 @@ export default function CatAnimation({ cat, emotionalState, playAnimation, onAni
         />
       </button>
 
-      {/* Name + stage + intimacy — compact, below the cat */}
-      <div className="flex-shrink-0 text-center mt-1">
-        <h2 className="text-xl font-extrabold text-gray-700">{cat?.name}</h2>
-        <p className="text-xs text-gray-400 font-medium">{getStageLabel(cat?.stage)}</p>
+      {/* Name + stage — compact below cat */}
+      <div className="flex-shrink-0 text-center mt-0.5 pb-1">
+        <h2 className="text-sm font-extrabold text-gray-700 leading-tight">{cat?.name}</h2>
+        <p className="text-[10px] text-gray-400">{getStageLabel(cat?.stage)}</p>
       </div>
-
-      <div className="flex-shrink-0 mt-1">
-        <IntimacyMeter intimacy={intimacy} />
-      </div>
-
-      {!hasTapped && (
-        <p className="flex-shrink-0 text-[10px] text-gray-300 mt-0.5 select-none animate-pulse">
-          {tapHint}
-        </p>
-      )}
     </div>
   )
 }

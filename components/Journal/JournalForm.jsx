@@ -2,6 +2,13 @@
 
 import { useState, useRef } from 'react'
 import useCatStore from '@/store/useCatStore'
+import ShareButton from '@/components/shared/ShareButton'
+
+function getTodayLabel() {
+  const d = new Date()
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+  return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}. ${days[d.getDay()]}`
+}
 
 const FIELD_CONFIG = [
   { label: '첫 번째 감사한 것', placeholder: '오늘 감사했던 순간을 한 문장으로...' },
@@ -9,7 +16,7 @@ const FIELD_CONFIG = [
   { label: '세 번째 감사한 것', placeholder: '마지막으로 하나 더 떠올려보세요 🌱' },
 ]
 
-export default function JournalForm({ prompt, onSubmit }) {
+export default function JournalForm({ prompt, onSubmit, cat }) {
   const { addCoinsOptimistic } = useCatStore()
 
   const [sentences,      setSentences]      = useState(['', '', ''])
@@ -77,6 +84,11 @@ export default function JournalForm({ prompt, onSubmit }) {
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="space-y-3">
+
+      {/* Date header */}
+      <div className="flex items-center gap-2 pb-1 border-b border-gray-100">
+        <span className="text-xs font-bold text-gray-400">{getTodayLabel()}</span>
+      </div>
 
       {/* ── 3 sentence boxes ── */}
       {sentences.map((s, i) => {
@@ -221,6 +233,13 @@ export default function JournalForm({ prompt, onSubmit }) {
               {loading ? '저장 중...' : '답하고 +20🪙 받기 🐱'}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* ── Share button (shows after all 3 done, even if follow-up pending) ── */}
+      {(allDone || phase === 'followup') && (
+        <div className="pt-1">
+          <ShareButton cat={cat} sentences={sentences.filter(Boolean)} />
         </div>
       )}
     </div>

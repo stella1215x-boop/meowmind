@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import useCatStore from '@/store/useCatStore'
 import CatAnimation from '@/components/Cat/CatAnimation'
+import IntimacyPanel from '@/components/Cat/IntimacyPanel'
 import CoinPanel from '@/components/Cat/CoinPanel'
 import CoinEarnedToast from '@/components/Cat/CoinEarnedToast'
 import StreakCounter from '@/components/Journal/StreakCounter'
@@ -11,13 +12,13 @@ import JournalForm from '@/components/Journal/JournalForm'
 import BottomNav from '@/components/shared/BottomNav'
 import MilestoneModal from '@/components/shared/MilestoneModal'
 import IntimacyRewardModal from '@/components/shared/IntimacyRewardModal'
-import ShareModal from '@/components/shared/ShareModal'
+import ShareButton from '@/components/shared/ShareButton'
 import SeasonalBanner from '@/components/Seasonal/SeasonalBanner'
+import { DAYS_PER_STAGE } from '@/lib/catGrowthService'
 
 export default function HomeClient({ cat: initialCat, emotionalState: initialState, hasWrittenToday: initialWritten, prompt, season, isPremium }) {
   const searchParams = useSearchParams()
   const isWelcome = searchParams.get('welcome') === '1'
-  const [showShare, setShowShare] = useState(false)
 
   const {
     cat, emotionalState, hasWrittenToday,
@@ -32,6 +33,12 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
   const activeCat     = cat ?? initialCat
   const activeState   = cat ? emotionalState : initialState
   const activeWritten = cat ? hasWrittenToday : initialWritten
+
+  // Days progress toward next stage
+  const daysWritten  = activeCat?.totalDaysWritten ?? 0
+  const currentStage = activeCat?.stage ?? 0
+  const daysInStage  = daysWritten - currentStage * DAYS_PER_STAGE
+  const pctToNext    = Math.min(daysInStage / DAYS_PER_STAGE, 1)
 
   async function handleJournalSubmit(sentences, followUpAnswer = null) {
     const res = await fetch('/api/journal', {
@@ -55,101 +62,138 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
       <div className="safe-top" />
       <CoinEarnedToast />
 
-      {/* ── FIXED TOP: Streak + Cat (never scrolls) ─────────────────────── */}
-
-      {/* Welcome / seasonal banners (compact, top only) */}
-      <div className="flex-shrink-0 px-5 pt-3">
+      {/* ── FIXED TOP ─────────────────────────────────────────────────────── */}
+      <div className="flex-shrink-0 px-4 pt-3">
         {isWelcome && (
-          <div className="mb-2 bg-lavender/10 rounded-2xl p-2.5 text-center animate-milestone-pop">
+          <div className="mb-1.5 bg-lavender/10 rounded-xl p-2 text-center animate-milestone-pop">
             <p className="text-xs font-semibold text-lavender">
               🎉 {activeCat?.name}와 함께하는 첫날이에요!
             </p>
           </div>
         )}
-        <SeasonalBanner
-          season={season}
-          isPremium={isPremium}
-          catName={activeCat?.name}
-          totalDaysWritten={activeCat?.totalDaysWritten ?? 0}
-        />
-        {/* Streak bar */}
-        <div className="mt-2 mb-1">
-          <StreakCounter
-            currentStreak={activeCat?.currentStreak ?? 0}
-            totalDaysWritten={activeCat?.totalDaysWritten ?? 0}
-          />
+        <SeasonalBanner season={season} isPremium={isPremium}
+          catName={activeCat?.name} totalDaysWritten={daysWritten} />
+
+        {/* Streak + growth progress */}
+        <div className="flex items-center gap-2 mt-1">
+          <div className="flex-1">
+            <StreakCounter currentStreak={activeCat?.currentStreak ?? 0}
+              totalDaysWritten={daysWritten} />
+          </div>
+          {/* Days to next stage */}
+          <div className="text-right">
+            <p className="text-[10px] text-gray-400 font-medium">
+              Day {daysInStage}/{DAYS_PER_STAGE}
+            </p>
+            <div className="w-20 h-1.5 bg-gray-200 rounded-full mt-0.5 overflow-hidden">
+              <div className="h-full bg-lavender rounded-full transition-all"
+                style={{ width: `${pctToNext * 100}%` }} />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Cat — fills ~37% of screen height, always centered */}
-      <div
-        className="flex-shrink-0 flex items-center justify-center"
-        style={{ height: '37vh' }}
-      >
-        <CatAnimation
-          cat={activeCat}
-          emotionalState={activeState}
-          playAnimation={playAnimation}
-          onAnimationEnd={clearAnimation}
-        />
+      {/* ── CAT AREA: Intimacy | Cat | Stats ─────────────────────────────── */}
+      <div className="flex-shrink-0 flex items-center px-2"
+           style={{ height: '34vh' }}>
+
+        {/* Left — Intimacy button */}
+        <div className="flex-shrink-0 w-20 flex justify-center">
+          <IntimacyPanel />
+        </div>
+
+        {/* Center — Cat */}
+        <div className="flex-1 h-full">
+          <CatAnimation
+            cat={activeCat}
+            emotionalState={activeState}
+            playAnimation={playAnimation}
+            onAnimationEnd={clearAnimation}
+          />
+        </div>
+
+        {/* Right — Coin / Food / Store */}
+        <div className="flex-shrink-0 w-20 flex flex-col gap-2 items-center">
+          <RightStat emoji="🪙" value={activeCat?.coins ?? 0} label="Coin" color="text-yellow-600" />
+          <RightStat emoji="🥩" value={`×${activeCat?.foodCount ?? 0}`} label="Food" color="text-orange-500" />
+          <StoreButton />
+        </div>
       </div>
 
       {/* ── SCROLLABLE BOTTOM ────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto px-5 pb-24">
-
-        {/* Coin / pantry panel */}
-        <div className="mb-4">
-          <CoinPanel />
-        </div>
-
-        <div className="h-px bg-gray-100 mb-4" />
-
-        {/* Journal area */}
-        {activeWritten
-          ? <WrittenTodayMessage catName={activeCat?.name} coins={activeCat?.coins ?? 0} onShare={() => setShowShare(true)} />
-          : <JournalForm prompt={prompt} onSubmit={handleJournalSubmit} />
-        }
+      <div className="flex-1 overflow-y-auto px-4 pb-24">
+        {activeWritten ? (
+          <WrittenTodayMessage cat={activeCat} />
+        ) : (
+          <JournalForm
+            prompt={prompt}
+            cat={activeCat}
+            onSubmit={handleJournalSubmit}
+          />
+        )}
       </div>
 
-      <BottomNav totalDaysWritten={activeCat?.totalDaysWritten ?? 0} />
+      <BottomNav totalDaysWritten={daysWritten} />
 
-      <MilestoneModal
-        milestone={milestone}
-        catName={activeCat?.name}
-        catColor={activeCat?.color}
-        catStage={activeCat?.stage}
-        onClose={clearMilestone}
-      />
+      <MilestoneModal milestone={milestone} catName={activeCat?.name}
+        catColor={activeCat?.color} catStage={activeCat?.stage} onClose={clearMilestone} />
       <IntimacyRewardModal reward={tierReward} cat={activeCat} onClose={clearTierReward} />
-      {showShare && <ShareModal cat={activeCat} onClose={() => setShowShare(false)} />}
     </div>
   )
 }
 
-function WrittenTodayMessage({ catName, coins, onShare }) {
+// ── Small sub-components ───────────────────────────────────────────────────
+
+function RightStat({ emoji, value, label, color }) {
+  return (
+    <div className="flex flex-col items-center bg-white/90 rounded-xl px-2 py-1.5
+                    shadow-sm border border-gray-100 w-full">
+      <span className="text-base">{emoji}</span>
+      <span className={`text-xs font-extrabold leading-tight ${color}`}>{value}</span>
+      <span className="text-[8px] text-gray-400">{label}</span>
+    </div>
+  )
+}
+
+function StoreButton() {
+  const [open, setOpen] = useState(false)
+  if (open) {
+    return (
+      <>
+        <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+        <div className="fixed inset-x-4 bottom-24 z-40 bg-white rounded-3xl shadow-2xl
+                        border border-gray-100 animate-milestone-pop overflow-hidden">
+          <CoinPanel onClose={() => setOpen(false)} />
+        </div>
+      </>
+    )
+  }
+  return (
+    <button
+      onClick={() => setOpen(true)}
+      className="flex flex-col items-center bg-lavender/10 rounded-xl px-2 py-1.5
+                 border border-lavender/20 w-full active:scale-95 transition-transform"
+    >
+      <span className="text-base">🛒</span>
+      <span className="text-[9px] font-bold text-lavender">Store</span>
+    </button>
+  )
+}
+
+function WrittenTodayMessage({ cat }) {
   return (
     <div className="flex flex-col items-center text-center space-y-4 py-6">
       <div className="text-5xl animate-float">✨</div>
       <div>
         <h3 className="text-xl font-extrabold text-gray-700">오늘 일지를 완료했어요!</h3>
         <p className="text-gray-500 text-sm mt-2 leading-relaxed">
-          {catName}가 행복해하고 있어요 🐱<br />내일 또 만나요!
+          {cat?.name}가 행복해하고 있어요 🐱<br />내일 또 만나요!
         </p>
       </div>
-      <div className="w-full bg-yellow-50 rounded-2xl p-3 border border-yellow-100">
-        <p className="text-xs text-yellow-700 font-semibold">
-          🪙 보유 코인 {coins}개 · 상점에서 간식을 사서 {catName}에게 줘보세요!
-        </p>
+      <div className="w-full bg-mint/20 rounded-2xl p-3">
+        <p className="text-xs text-gray-500">매일 꾸준히 10일 쓰면 {cat?.name}가 성장해요 🌱</p>
       </div>
-      <div className="w-full bg-mint/20 rounded-2xl p-4">
-        <p className="text-xs text-gray-500">매일 꾸준히 쓰면 {catName}가 더 빨리 자라요 🌱</p>
-      </div>
-      <button
-        onClick={onShare}
-        className="flex items-center gap-2 px-5 py-2.5 rounded-2xl border border-lavender/40 text-lavender text-sm font-bold active:scale-95 transition-transform"
-      >
-        <span>📤</span>성장 카드 공유하기
-      </button>
+      <ShareButton cat={cat} sentences={[]} />
     </div>
   )
 }

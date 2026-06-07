@@ -18,7 +18,7 @@ const PANTRY_SLOTS = [
   { emoji: '🏠', key: 'inv_houses',   label: '집',   getCount: (inv) => inv.houses,   permanent: true },
 ]
 
-export default function CoinPanel() {
+export default function CoinPanel({ onClose }) {
   const { cat, feedCat, buyItem, consumeItem, playAnimation } = useCatStore()
 
   const coins     = cat?.coins     ?? 0
@@ -173,9 +173,22 @@ export default function CoinPanel() {
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden animate-milestone-pop">
 
           {/* Header */}
-          <div className="px-4 pt-3 pb-2 flex items-center justify-between border-b border-gray-50">
-            <p className="text-sm font-extrabold text-gray-700">🛒 상점</p>
-            <p className="text-xs text-gray-400">보유: <span className="text-yellow-600 font-bold">{coins}🪙</span></p>
+          <div className="px-4 pt-3 pb-2 border-b border-gray-50">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-extrabold text-gray-700">Store</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-gray-400">🪙 <span className="text-yellow-600 font-bold">{coins}</span></p>
+                {onClose && (
+                  <button onClick={onClose}
+                    className="text-gray-400 text-lg font-bold leading-none active:scale-90 transition-transform">
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-0.5">
+              Days {cat?.totalDaysWritten ?? 0}/10 · 10 days straight for next growth step
+            </p>
           </div>
 
           {/* Category tabs */}
