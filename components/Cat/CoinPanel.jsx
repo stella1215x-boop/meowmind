@@ -18,14 +18,15 @@ const PANTRY_SLOTS = [
   { emoji: '🏠', key: 'inv_houses',   label: '집',   getCount: (inv) => inv.houses,   permanent: true },
 ]
 
-export default function CoinPanel({ onClose }) {
+export default function CoinPanel({ onClose, storeOnly = false }) {
   const { cat, feedCat, buyItem, consumeItem, playAnimation } = useCatStore()
 
   const coins     = cat?.coins     ?? 0
   const foodCount = cat?.foodCount ?? 0
   const inventory = normalizeInventory(cat?.inventory)
 
-  const [shopOpen,    setShopOpen]    = useState(false)
+  // When storeOnly=true, skip the main panel and open shop directly
+  const [shopOpen,    setShopOpen]    = useState(storeOnly)
   const [activeTab,   setActiveTab]   = useState('food')
   const [buying,      setBuying]      = useState(null)   // itemId
   const [using,       setUsing]       = useState(null)   // itemId
@@ -88,8 +89,8 @@ export default function CoinPanel({ onClose }) {
   return (
     <div className="w-full space-y-2">
 
-      {/* ── Main card ── */}
-      <div className="bg-white/90 rounded-2xl px-4 py-3 shadow-sm border border-gray-100 space-y-3">
+      {/* ── Main card — hidden in storeOnly mode ── */}
+      {!storeOnly && <div className="bg-white/90 rounded-2xl px-4 py-3 shadow-sm border border-gray-100 space-y-3">
 
         {/* Row 1 — Coins */}
         <div className="flex items-center gap-2 bg-yellow-50 rounded-xl px-3 py-2">
@@ -166,7 +167,7 @@ export default function CoinPanel({ onClose }) {
             </button>
           )}
         </div>
-      </div>
+      </div>}
 
       {/* ── Shop ── */}
       {shopOpen && (

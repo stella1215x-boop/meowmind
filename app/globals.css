@@ -98,6 +98,10 @@ body {
   .bg-cream {
     background-color: #FFF8F0;
   }
+  /* MeowMind purple app background */
+  .bg-meow {
+    background: linear-gradient(160deg, #6D28D9 0%, #7C3AED 40%, #8B5CF6 100%);
+  }
   /* 100svh: 모바일 주소창이 사라질 때 튀는 현상 방지 */
   .h-svh {
     height: 100svh;
