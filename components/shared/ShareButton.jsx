@@ -80,7 +80,7 @@ export default function ShareButton({ cat, sentences = [] }) {
                    shadow-lavender/30 active:scale-95 transition-all hover:opacity-90"
       >
         <span>📤</span>
-        <span>Share</span>
+        <span>공유하기</span>
       </button>
     </div>
   )

@@ -1,67 +1,63 @@
 import { STAGE_CONFIG, DAYS_PER_STAGE } from '@/lib/catGrowthService'
 
-// Emoji representing each growth stage
-const STAGE_EMOJI = ['🥚', '🐱', '🐈', '🐈', '🦁', '✨']
+// Natural cat growth journey — clearly shows what comes next
+const STAGE_EMOJI  = ['🐣', '🐱', '🐈', '😸', '🦁', '👑']
+const STAGE_LABEL  = ['아기', '아기 고양이', '청소년', '성인', '현명한 고양이', '전설']
 
 export default function StreakCounter({ currentStreak, totalDaysWritten }) {
   const currentStage = Math.min(
-    STAGE_CONFIG.findIndex(s => totalDaysWritten < s.minDays + DAYS_PER_STAGE) - 1,
+    Math.max(STAGE_CONFIG.findIndex(s => totalDaysWritten < s.minDays + DAYS_PER_STAGE) - 1, 0),
     5
   )
-  const safeStage    = Math.max(0, currentStage)
-  const daysInStage  = totalDaysWritten - safeStage * DAYS_PER_STAGE
-  const daysLeft     = DAYS_PER_STAGE - daysInStage
-  const pct          = Math.min(daysInStage / DAYS_PER_STAGE, 1) * 100
-  const isLegendary  = totalDaysWritten >= 50  // stage 5
+  const daysInStage = totalDaysWritten - currentStage * DAYS_PER_STAGE
+  const pct         = Math.min(daysInStage / DAYS_PER_STAGE, 1) * 100
+  const isLegendary = currentStage >= 5
 
-  const nextEmoji    = STAGE_EMOJI[Math.min(safeStage + 1, 5)]
-  const curEmoji     = STAGE_EMOJI[safeStage]
+  const curEmoji  = STAGE_EMOJI[currentStage]
+  const nextEmoji = STAGE_EMOJI[Math.min(currentStage + 1, 5)]
 
   return (
     <div className="flex items-center gap-2.5">
 
       {/* 🔥 Streak badge */}
-      <div className="flex-shrink-0 flex items-center gap-1.5
-                      bg-white rounded-2xl px-3 py-2 shadow-sm border border-gray-100">
-        <span className="text-lg">{currentStreak > 0 ? '🔥' : '💤'}</span>
+      <div className="flex-shrink-0 flex items-center gap-2
+                      bg-white rounded-2xl px-3 py-2.5 shadow-sm border border-gray-100">
+        <span className="text-2xl">{currentStreak > 0 ? '🔥' : '💤'}</span>
         <div>
-          <p className="text-base font-extrabold text-gray-800 leading-none">
-            {currentStreak}<span className="text-xs font-semibold text-gray-500 ml-0.5">일</span>
+          <p className="text-lg font-extrabold text-gray-800 leading-none">
+            {currentStreak}<span className="text-sm font-semibold text-gray-500 ml-0.5">일</span>
           </p>
-          <p className="text-[9px] text-gray-400 mt-0.5">연속 작성</p>
+          <p className="text-[11px] text-gray-400 mt-0.5 font-medium">연속 작성</p>
         </div>
       </div>
 
       {/* 🐱 Cat growth progress */}
-      <div className="flex-1 bg-white rounded-2xl px-3 py-2 shadow-sm border border-gray-100">
+      <div className="flex-1 bg-white rounded-2xl px-3 py-2.5 shadow-sm border border-gray-100">
         {isLegendary ? (
-          <div className="flex items-center justify-center gap-1.5">
-            <span className="text-base">✨</span>
-            <p className="text-xs font-bold text-lavender">전설의 고양이!</p>
-            <span className="text-base">✨</span>
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-2xl">👑</span>
+            <p className="text-sm font-bold text-lavender">전설의 고양이!</p>
+            <span className="text-2xl">✨</span>
           </div>
         ) : (
-          <>
-            {/* Stage emoji + progress + next stage */}
-            <div className="flex items-center gap-2">
-              <span className="text-base flex-shrink-0">{curEmoji}</span>
-              <div className="flex-1">
-                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-lavender to-pink-300 rounded-full
-                               transition-all duration-700"
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <p className="text-[9px] text-gray-400 mt-0.5 text-center leading-none">
-                  {daysLeft > 0
-                    ? `${daysLeft}일 더 쓰면 성장해요 🌱`
-                    : '오늘 쓰면 성장해요! 🎉'}
-                </p>
+          <div className="flex items-center gap-2">
+            {/* Current stage */}
+            <span className="text-2xl flex-shrink-0">{curEmoji}</span>
+
+            {/* Progress bar only — no text */}
+            <div className="flex-1">
+              <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-lavender to-pink-300 rounded-full
+                             transition-all duration-700"
+                  style={{ width: `${pct}%` }}
+                />
               </div>
-              <span className="text-base flex-shrink-0 opacity-50">{nextEmoji}</span>
             </div>
-          </>
+
+            {/* Next stage — dimmed arrow feel */}
+            <span className="text-2xl flex-shrink-0 opacity-40">{nextEmoji}</span>
+          </div>
         )}
       </div>
     </div>

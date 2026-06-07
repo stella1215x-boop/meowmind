@@ -37,8 +37,8 @@ export default function IntimacyPanel() {
                     bg-gradient-to-br from-purple-500 to-pink-500
                     ${isBusy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
-        <span className="text-xl">🎮</span>
-        <span className="text-[9px] font-bold text-white mt-0.5">놀아주기</span>
+        <span className="text-xl">🧶</span>
+        <span className="text-[10px] font-bold text-white mt-0.5">놀아주기</span>
       </button>
     </div>
   )
