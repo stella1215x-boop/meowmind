@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import useCatStore from '@/store/useCatStore'
 import CatAnimation from '@/components/Cat/CatAnimation'
 import IntimacyPanel from '@/components/Cat/IntimacyPanel'
-import CoinPanel from '@/components/Cat/CoinPanel'
+import RightInventoryPanel from '@/components/Cat/RightInventoryPanel'
 import CoinEarnedToast from '@/components/Cat/CoinEarnedToast'
 import StreakCounter from '@/components/Journal/StreakCounter'
 import JournalForm from '@/components/Journal/JournalForm'
@@ -112,11 +112,9 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
           />
         </div>
 
-        {/* Right — Coin / Food / Store */}
-        <div className="flex-shrink-0 w-20 flex flex-col gap-2 items-center">
-          <RightStat emoji="🪙" value={activeCat?.coins ?? 0} label="Coin" color="text-yellow-600" />
-          <RightStat emoji="🥩" value={`×${activeCat?.foodCount ?? 0}`} label="Food" color="text-orange-500" />
-          <StoreButton />
+        {/* Right — Inventory panel (subscribes to store directly) */}
+        <div className="flex-shrink-0 relative flex justify-center">
+          <RightInventoryPanel />
         </div>
       </div>
 
@@ -142,43 +140,6 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
   )
 }
 
-// ── Small sub-components ───────────────────────────────────────────────────
-
-function RightStat({ emoji, value, label, color }) {
-  return (
-    <div className="flex flex-col items-center bg-white/90 rounded-xl px-2 py-1.5
-                    shadow-sm border border-gray-100 w-full">
-      <span className="text-base">{emoji}</span>
-      <span className={`text-xs font-extrabold leading-tight ${color}`}>{value}</span>
-      <span className="text-[8px] text-gray-400">{label}</span>
-    </div>
-  )
-}
-
-function StoreButton() {
-  const [open, setOpen] = useState(false)
-  if (open) {
-    return (
-      <>
-        <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-        <div className="fixed inset-x-4 bottom-24 z-40 bg-white rounded-3xl shadow-2xl
-                        border border-gray-100 animate-milestone-pop overflow-hidden">
-          <CoinPanel onClose={() => setOpen(false)} />
-        </div>
-      </>
-    )
-  }
-  return (
-    <button
-      onClick={() => setOpen(true)}
-      className="flex flex-col items-center bg-lavender/10 rounded-xl px-2 py-1.5
-                 border border-lavender/20 w-full active:scale-95 transition-transform"
-    >
-      <span className="text-base">🛒</span>
-      <span className="text-[9px] font-bold text-lavender">Store</span>
-    </button>
-  )
-}
 
 function WrittenTodayMessage({ cat }) {
   return (
