@@ -15,12 +15,13 @@ const useCatStore = create((set, get) => ({
   milestone: null,       // 7 | 14 | 30 | 60 | 100
   coinsEarned: null,     // { amount, streakBonus } | null
   tierReward: null,      // tier reward object from TIER_REWARDS | null
+  todaySentences: [],    // last submitted 3 sentences (for share card)
 
   hydrate(cat, emotionalState, hasWrittenToday) {
     set({ cat, emotionalState, hasWrittenToday })
   },
 
-  onJournalSubmitted(updatedCat, milestone, coinsEarned = 0, streakBonus = 0, tierReward = null) {
+  onJournalSubmitted(updatedCat, milestone, coinsEarned = 0, streakBonus = 0, tierReward = null, sentences = []) {
     const intimacy = updatedCat?.intimacy ?? 0
     // After writing, always feel happy → pick a joyful animation
     const joyful =
@@ -37,6 +38,7 @@ const useCatStore = create((set, get) => ({
       milestone: milestone ?? null,
       coinsEarned: coinsEarned > 0 ? { amount: coinsEarned, streakBonus } : null,
       tierReward: tierReward ?? null,
+      todaySentences: sentences.filter(Boolean),
     })
   },
 

@@ -41,10 +41,10 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sentences, followUpAnswer }),
     })
-    if (res.status === 409) { onJournalSubmitted(activeCat, null, 0, 0); return }
+    if (res.status === 409) { onJournalSubmitted(activeCat, null, 0, 0, null, sentences); return }
     if (!res.ok) { alert('저장 중 오류가 생겼어요. 다시 시도해 주세요.'); return }
     const data = await res.json()
-    onJournalSubmitted(data.cat, data.milestone, data.coinsEarned ?? 0, data.streakBonus ?? 0, data.tierReward ?? null)
+    onJournalSubmitted(data.cat, data.milestone, data.coinsEarned ?? 0, data.streakBonus ?? 0, data.tierReward ?? null, sentences)
     void fetch('/api/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
