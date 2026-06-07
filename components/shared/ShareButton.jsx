@@ -58,99 +58,147 @@ function wrapText(ctx, text, x, y, maxW, lineH) {
   return curY + lineH
 }
 
+// Capture the Rive canvas element currently on screen
+async function captureRiveCat() {
+  try {
+    const riveCanvas = document.querySelector('canvas')
+    if (!riveCanvas) return null
+    return await new Promise(r => {
+      try { riveCanvas.toBlob(r, 'image/png') }
+      catch { r(null) }
+    })
+  } catch { return null }
+}
+
+// Load an image blob into an HTMLImageElement
+function loadImage(blob) {
+  return new Promise(resolve => {
+    const img = new Image()
+    const url = URL.createObjectURL(blob)
+    img.onload  = () => { URL.revokeObjectURL(url); resolve(img) }
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null) }
+    img.src = url
+  })
+}
+
 async function buildShareImage(cat, sentences) {
-  const W = 1080, PAD = 80
+  // ── Canvas: 1080×1920 (Instagram Stories 9:16) ───────────────────────────
+  const W = 1080, H = 1920
+  const PAD = 72
+
   const stageEmoji = STAGE_EMOJI[Math.min(cat?.stage ?? 0, 5)]
   const catName    = cat?.name ?? '고양이'
   const stageLabel = getStageLabel(cat?.stage ?? 0)
   const today      = getTodayLabel()
   const sentList   = sentences.filter(Boolean)
 
-  // Estimate height
-  const lineH = 52
-  const sentH = sentList.reduce((h, s) => {
-    const lines = Math.max(1, Math.ceil(s.length / 20))
-    return h + lines * lineH + 24
-  }, 0)
-  const H = 360 + sentH + 160
+  // Capture cat image in parallel while building canvas
+  const catBlob  = await captureRiveCat()
+  const catImg   = catBlob ? await loadImage(catBlob) : null
 
   const canvas = document.createElement('canvas')
   canvas.width = W; canvas.height = H
-
   const ctx = canvas.getContext('2d')
 
-  // Background
-  const grad = ctx.createLinearGradient(0, 0, W, H)
-  grad.addColorStop(0, '#f5f3ff')
-  grad.addColorStop(1, '#fce7f3')
+  // ── TOP HALF: gradient background + cat image ──────────────────────────
+  const topH = 800
+  const grad = ctx.createLinearGradient(0, 0, W, topH)
+  grad.addColorStop(0, '#7c3aed')
+  grad.addColorStop(1, '#a855f7')
   ctx.fillStyle = grad
-  ctx.fillRect(0, 0, W, H)
+  ctx.fillRect(0, 0, W, topH)
 
-  // Header card (white)
-  ctx.fillStyle = 'rgba(255,255,255,0.75)'
-  drawRoundRect(ctx, PAD, PAD, W - PAD*2, 200, 32)
-  ctx.fill()
-
-  // Stage emoji
-  ctx.font = '110px serif'
-  ctx.textBaseline = 'middle'
-  ctx.fillText(stageEmoji, PAD + 30, PAD + 100)
-
-  // Cat name
-  ctx.font = 'bold 64px -apple-system, sans-serif'
-  ctx.fillStyle = '#1f2937'
-  ctx.textAlign = 'left'
-  ctx.textBaseline = 'alphabetic'
-  ctx.fillText(catName, PAD + 160, PAD + 90)
-
-  // Stage label + date
-  ctx.font = '40px -apple-system, sans-serif'
-  ctx.fillStyle = '#9ca3af'
-  ctx.fillText(`${stageLabel} · ${today}`, PAD + 160, PAD + 152)
-
-  // meow-mind brand
-  ctx.font = 'bold 30px -apple-system, sans-serif'
-  ctx.fillStyle = '#c4b5fd'
-  ctx.textAlign = 'center'
-  ctx.fillText('meow-mind 🐱', W / 2, PAD + 244)
-
-  // Divider
-  ctx.strokeStyle = '#e5e7eb'
-  ctx.lineWidth = 2
-  ctx.beginPath()
-  ctx.moveTo(PAD, PAD + 270)
-  ctx.lineTo(W - PAD, PAD + 270)
-  ctx.stroke()
-
-  // Sentences
-  const nums = ['①', '②', '③']
-  let y = PAD + 316
-  const maxW = W - PAD * 2 - 100
-
-  ctx.textAlign = 'left'
-  for (let i = 0; i < sentList.length; i++) {
-    // Number circle bg
-    ctx.fillStyle = '#ede9fe'
-    drawRoundRect(ctx, PAD, y - 44, 66, 56, 14)
+  // Draw cat image (from Rive canvas), centered in top half
+  const catSize = 600
+  const catX    = (W - catSize) / 2
+  const catY    = 60
+  if (catImg) {
+    // White circle backdrop
+    ctx.save()
+    ctx.beginPath()
+    ctx.arc(W / 2, catY + catSize / 2, catSize / 2 + 20, 0, Math.PI * 2)
+    ctx.fillStyle = 'rgba(255,255,255,0.15)'
     ctx.fill()
-
-    ctx.font = 'bold 40px -apple-system, sans-serif'
-    ctx.fillStyle = '#7c3aed'
+    ctx.restore()
+    ctx.drawImage(catImg, catX, catY, catSize, catSize)
+  } else {
+    // Fallback: large stage emoji
+    ctx.font = '320px serif'
     ctx.textAlign = 'center'
-    ctx.fillText(nums[i], PAD + 33, y)
-
-    ctx.font = '40px -apple-system, sans-serif'
-    ctx.fillStyle = '#374151'
-    ctx.textAlign = 'left'
-    y = wrapText(ctx, sentList[i], PAD + 90, y, maxW, lineH)
-    y += 24
+    ctx.textBaseline = 'middle'
+    ctx.fillText(stageEmoji, W / 2, catY + catSize / 2)
   }
 
-  // Hashtags
-  ctx.font = '32px -apple-system, sans-serif'
+  // meow-mind brand in top section
+  ctx.font = 'bold 44px -apple-system, sans-serif'
+  ctx.fillStyle = 'rgba(255,255,255,0.9)'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'alphabetic'
+  ctx.fillText('meow-mind 🐱', W / 2, topH - 30)
+
+  // ── BOTTOM HALF: white rounded card ────────────────────────────────────
+  const cardY = topH - 60   // overlaps top slightly
+  ctx.fillStyle = '#ffffff'
+  drawRoundRect(ctx, 0, cardY, W, H - cardY, 60)
+  ctx.fill()
+
+  // Cat name + stage emoji row
+  const nameY = cardY + 100
+  ctx.font = '100px serif'
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'alphabetic'
+  ctx.fillText(stageEmoji, PAD, nameY)
+
+  ctx.font = 'bold 80px -apple-system, sans-serif'
+  ctx.fillStyle = '#1f2937'
+  ctx.fillText(catName, PAD + 130, nameY - 10)
+
+  // Stage + date
+  ctx.font = '48px -apple-system, sans-serif'
+  ctx.fillStyle = '#9ca3af'
+  ctx.fillText(`${stageLabel} · ${today}`, PAD + 130, nameY + 58)
+
+  // Thin divider
+  const divY = nameY + 110
+  ctx.strokeStyle = '#f3f4f6'
+  ctx.lineWidth = 3
+  ctx.beginPath(); ctx.moveTo(PAD, divY); ctx.lineTo(W - PAD, divY); ctx.stroke()
+
+  // Sentences
+  const lineH = 60
+  const maxW  = W - PAD * 2 - 110
+  const nums  = ['①', '②', '③']
+  let y = divY + 80
+  ctx.textAlign = 'left'
+
+  for (let i = 0; i < Math.min(sentList.length, 3); i++) {
+    // Number pill
+    ctx.fillStyle = '#ede9fe'
+    drawRoundRect(ctx, PAD, y - 50, 72, 64, 16)
+    ctx.fill()
+    ctx.font = 'bold 46px -apple-system, sans-serif'
+    ctx.fillStyle = '#7c3aed'
+    ctx.textAlign = 'center'
+    ctx.fillText(nums[i], PAD + 36, y)
+
+    // Sentence text
+    ctx.font = '46px -apple-system, sans-serif'
+    ctx.fillStyle = '#374151'
+    ctx.textAlign = 'left'
+    y = wrapText(ctx, sentList[i], PAD + 100, y, maxW, lineH)
+    y += 28
+  }
+
+  // Hashtags — ensure they fit within card
+  const hashY = Math.max(y + 60, H - 140)
+  ctx.font = '38px -apple-system, sans-serif'
   ctx.fillStyle = '#a78bfa'
   ctx.textAlign = 'center'
-  ctx.fillText(HASHTAGS, W / 2, H - 50)
+  // Split into two lines if needed
+  const tags1 = '#MeowMind #감사일기 #오늘의고양이'
+  const tags2 = '#마음챙김 #gratitude'
+  ctx.fillText(tags1, W / 2, hashY)
+  ctx.fillText(tags2, W / 2, hashY + 52)
 
   return new Promise(r => canvas.toBlob(r, 'image/png', 0.95))
 }
