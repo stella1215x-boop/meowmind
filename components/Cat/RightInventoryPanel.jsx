@@ -119,7 +119,7 @@ export default function RightInventoryPanel() {
                 {foodCount > 0 && (
                   <div className="flex items-center gap-2 px-2 py-2
                                   bg-orange-50 rounded-xl border border-orange-100">
-                    <span className="text-xl">🥩</span>
+                    <span className="text-xl">🐟</span>
                     <div className="flex-1">
                       <p className="text-sm font-bold text-gray-700">음식</p>
                     </div>
