@@ -35,23 +35,23 @@ export default function RightInventoryPanel() {
       <div className="flex flex-col gap-2 w-[72px]">
 
         {/* Coin */}
-        <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-2 py-2
-                        flex flex-col items-center border border-white/30">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-2 py-2
+                        flex flex-col items-center">
           <span className="text-base">🪙</span>
-          <span className="text-xs font-extrabold text-white leading-tight">{coins}</span>
+          <span className="text-xs font-extrabold text-yellow-600 leading-tight">{coins}</span>
         </div>
 
         {/* Pantry button */}
         <button
           onClick={() => { setPantryOpen(v => !v); setShopOpen(false) }}
           className={`rounded-2xl px-2 py-2 flex flex-col items-center border
-                      transition-all active:scale-90
+                      transition-all active:scale-90 relative
             ${pantryOpen
-              ? 'bg-white/40 border-white/60 scale-[1.02]'
-              : 'bg-white/20 backdrop-blur-sm border-white/30'}`}
+              ? 'bg-lavender/30 border-lavender/50'
+              : 'bg-white/90 border-gray-200 shadow-sm'}`}
         >
           <span className="text-base">📦</span>
-          <span className="text-[9px] font-bold text-white/90">Pantry</span>
+          <span className="text-[9px] font-bold text-gray-600">Pantry</span>
           {ownedItems.length > 0 && (
             <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-pink-500
                              rounded-full text-[7px] text-white font-bold
@@ -67,11 +67,11 @@ export default function RightInventoryPanel() {
           className={`rounded-2xl px-2 py-2 flex flex-col items-center border
                       transition-all active:scale-90
             ${shopOpen
-              ? 'bg-white/40 border-white/60'
-              : 'bg-white/20 backdrop-blur-sm border-white/30'}`}
+              ? 'bg-lavender/30 border-lavender/50'
+              : 'bg-white/90 border-gray-200 shadow-sm'}`}
         >
           <span className="text-base">🛒</span>
-          <span className="text-[9px] font-bold text-white/90">Shop</span>
+          <span className="text-[9px] font-bold text-gray-600">Shop</span>
         </button>
       </div>
 

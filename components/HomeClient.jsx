@@ -58,15 +58,15 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
   }
 
   return (
-    <div className="mobile-container flex flex-col bg-meow" style={{ height: '100dvh' }}>
+    <div className="mobile-container flex flex-col bg-cream" style={{ height: '100dvh' }}>
       <div className="safe-top" />
       <CoinEarnedToast />
 
       {/* ── FIXED TOP ─────────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 px-4 pt-3">
         {isWelcome && (
-          <div className="mb-1.5 bg-white/20 rounded-xl p-2 text-center animate-milestone-pop">
-            <p className="text-xs font-semibold text-white">
+          <div className="mb-1.5 bg-lavender/10 rounded-xl p-2 text-center animate-milestone-pop">
+            <p className="text-xs font-semibold text-lavender">
               🎉 {activeCat?.name}와 함께하는 첫날이에요!
             </p>
           </div>
@@ -82,11 +82,11 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
           </div>
           {/* Days to next stage */}
           <div className="text-right">
-            <p className="text-[10px] text-white/70 font-medium">
+            <p className="text-[10px] text-gray-400 font-medium">
               Day {daysInStage}/{DAYS_PER_STAGE}
             </p>
-            <div className="w-20 h-1.5 bg-white/20 rounded-full mt-0.5 overflow-hidden">
-              <div className="h-full bg-white/80 rounded-full transition-all"
+            <div className="w-20 h-1.5 bg-gray-200 rounded-full mt-0.5 overflow-hidden">
+              <div className="h-full bg-lavender rounded-full transition-all"
                 style={{ width: `${pctToNext * 100}%` }} />
             </div>
           </div>
@@ -118,9 +118,8 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
         </div>
       </div>
 
-      {/* ── SCROLLABLE BOTTOM (white card) ───────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto bg-white/95 rounded-t-3xl px-4 pt-4 pb-24
-                      shadow-[0_-4px_24px_rgba(0,0,0,0.12)]">
+      {/* ── SCROLLABLE BOTTOM ────────────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto px-4 pt-2 pb-24">
         {activeWritten ? (
           <WrittenTodayMessage cat={activeCat} />
         ) : (
