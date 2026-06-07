@@ -73,12 +73,13 @@ export async function POST(req) {
   const isMilestone = MILESTONES.includes(newTotal) ? newTotal : null
 
   // Coins: 10 per sentence (3 × 10 = 30) + 10 completion bonus + 20 follow-up bonus
-  const sentenceCoins    = 30                                                 // always 3 valid sentences
-  const completionBonus  = 10                                                 // reward for completing all 3
-  const followUpBonus    = followUpAnswer?.trim().length >= 5 ? 20 : 0       // optional deep-reflection bonus
-  const coinsEarned      = sentenceCoins + completionBonus + followUpBonus   // 40–60 before streak
-  // Bonus +50 every 7-day streak milestone
-  const streakBonus      = newStreak > 0 && newStreak % 7 === 0 ? 50 : 0
+  // ── Economy: scarcer coins → motivates store purchases ───────────────────
+  const sentenceCoins    = 15                                                 // 3 sentences = 15 coins
+  const completionBonus  = 0                                                  // removed (was too generous)
+  const followUpBonus    = followUpAnswer?.trim().length >= 5 ? 8 : 0        // reflection bonus: 8 coins
+  const coinsEarned      = sentenceCoins + completionBonus + followUpBonus   // 15–23 before streak
+  // Bonus +20 every 7-day streak (reduced from 50)
+  const streakBonus      = newStreak > 0 && newStreak % 7 === 0 ? 20 : 0
   const totalCoinsEarned = coinsEarned + streakBonus
   const newCoins         = (cat?.coins ?? 0) + totalCoinsEarned
 

@@ -92,6 +92,7 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
             emotionalState={activeState}
             playAnimation={playAnimation}
             onAnimationEnd={clearAnimation}
+            hasWrittenToday={activeWritten}
           />
         </div>
 

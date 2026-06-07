@@ -54,7 +54,7 @@ const useCatStore = create((set, get) => ({
   async doInteract(action) {
     if (get().playAnimation) return null
     // Optimistic coin update
-    const COINS = { pet: 3, talk: 2, brush: 3 }
+    const COINS = { pet: 1, talk: 1, brush: 1 }  // reduced for economy balance
     const ANIMS = { pet: 'purr', talk: 'nuzzle', brush: 'groom' }
     const gained = COINS[action] ?? 2
     const cat = get().cat

@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import useCatStore from '@/store/useCatStore'
 import { normalizeInventory, SHOP_ITEMS } from '@/lib/shopCatalog'
+import { getIntimacyTier } from '@/lib/catGrowthService'
+import { FeedingReaction } from './CatEmotionReaction'
 import dynamic from 'next/dynamic'
 
 const CoinPanel = dynamic(() => import('./CoinPanel'), {
@@ -12,14 +14,17 @@ const CoinPanel = dynamic(() => import('./CoinPanel'), {
 
 export default function RightInventoryPanel() {
   const { cat, feedCat, consumeItem, playAnimation } = useCatStore()
-  const [pantryOpen, setPantryOpen] = useState(false)
-  const [shopOpen,   setShopOpen]   = useState(false)
-  const [feeding,    setFeeding]    = useState(false)
-  const [toast,      setToast]      = useState(null)
+  const [pantryOpen,    setPantryOpen]    = useState(false)
+  const [shopOpen,      setShopOpen]      = useState(false)
+  const [feeding,       setFeeding]       = useState(false)
+  const [showReaction,  setShowReaction]  = useState(false)
+  const [toast,         setToast]         = useState(null)
 
   const coins     = cat?.coins     ?? 0
   const foodCount = cat?.foodCount ?? 0
+  const intimacy  = cat?.intimacy  ?? 0
   const inventory = normalizeInventory(cat?.inventory)
+  const tierKey   = getIntimacyTier(intimacy).key
   const isBusy    = !!playAnimation || feeding
 
   const ownedConsumables = SHOP_ITEMS
@@ -38,7 +43,7 @@ export default function RightInventoryPanel() {
     setFeeding(true)
     setPantryOpen(false)
     await feedCat()
-    flash('냠냠 😸')
+    setShowReaction(true)  // trigger emotion reaction
     setTimeout(() => setFeeding(false), 2600)
   }
 
@@ -51,6 +56,13 @@ export default function RightInventoryPanel() {
 
   return (
     <>
+      {/* Feeding emotion reaction — overlays the cat area */}
+      <FeedingReaction
+        tierKey={tierKey}
+        show={showReaction}
+        onDone={() => setShowReaction(false)}
+      />
+
       {/* Toast */}
       {toast && (
         <div className="absolute right-2 -top-8 text-sm font-bold text-lavender

@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import useCatStore from '@/store/useCatStore'
 import IntimacyMeter from './IntimacyMeter'
 import { getStageLabel, getIntimacyTier } from '@/lib/catGrowthService'
+import { CatRequestBubble } from './CatEmotionReaction'
 import CatSvg from './CatSvg'
 
 // Load Rive component only in the browser — never during SSR/build
@@ -17,7 +18,7 @@ const CatRiveCharacter = dynamic(
   }
 )
 
-export default function CatAnimation({ cat, emotionalState, playAnimation, onAnimationEnd }) {
+export default function CatAnimation({ cat, emotionalState, playAnimation, onAnimationEnd, hasWrittenToday = false }) {
   const { triggerTapAnimation } = useCatStore()
   const [hasTapped, setHasTapped] = useState(false)
   const isBusy = !!playAnimation
@@ -38,8 +39,20 @@ export default function CatAnimation({ cat, emotionalState, playAnimation, onAni
     triggerTapAnimation()
   }
 
+  // Estimate hours since last fed (from lastFedAt)
+  const lastFedHoursAgo = cat?.lastFedAt
+    ? Math.floor((Date.now() - new Date(cat.lastFedAt).getTime()) / 3600000)
+    : 99
+
   return (
-    <div className="flex flex-col items-center w-full h-full">
+    <div className="flex flex-col items-center w-full h-full relative">
+      {/* Cat speech bubble requests */}
+      <CatRequestBubble
+        cat={cat}
+        hasWrittenToday={hasWrittenToday}
+        lastFedHoursAgo={lastFedHoursAgo}
+      />
+
       {/* Tappable cat — fills the 37vh container set by HomeClient */}
       <button
         onClick={handleTap}

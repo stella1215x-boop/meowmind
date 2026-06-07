@@ -52,13 +52,13 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
     setCoinPopKeys(prev => { const n = [...prev]; n[i] = Date.now(); return n })
 
     // ★ Optimistically update the coin counter in the store immediately
-    addCoinsOptimistic(10)
+    addCoinsOptimistic(5)
 
     if (newDone.every(Boolean)) {
       // Show bonus badge (+10), update coins, then slide in follow-up question
       setTimeout(() => {
         setBonusVisible(true)
-        addCoinsOptimistic(10) // completion bonus
+        // completion bonus removed
       }, 300)
       setTimeout(() => setPhase('followup'), 1400)
       setTimeout(() => followUpRef.current?.focus(), 1600)
@@ -75,7 +75,7 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
   async function handleSubmit(withAnswer) {
     if (loading) return
     // Optimistically show the follow-up bonus before the API round-trip
-    if (withAnswer && canAnswer) addCoinsOptimistic(20)
+    if (withAnswer && canAnswer) addCoinsOptimistic(8)
     setLoading(true)
     await onSubmit(sentences, withAnswer && canAnswer ? followUpAnswer : null)
     setLoading(false)
@@ -107,14 +107,14 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
                 ? 'border-gray-100 opacity-70'
                 : 'border-gray-100 shadow-sm'}`}
           >
-            {/* Coin pop (+10🪙 floats up on complete) */}
+            {/* Coin pop (+5🪙 floats up on complete) */}
             {coinPopKeys[i] && (
               <span
                 key={coinPopKeys[i]}
                 className="absolute -top-6 right-4 text-sm font-extrabold text-yellow-500
                            animate-coin-pop pointer-events-none select-none z-20"
               >
-                +10🪙
+                +5🪙
               </span>
             )}
 
@@ -172,7 +172,7 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
         <div className="flex justify-center animate-milestone-pop">
           <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200
                           rounded-full px-4 py-1.5">
-            <span className="text-base font-extrabold text-yellow-500">+10🪙</span>
+            <span className="text-base font-extrabold text-yellow-500">+5🪙</span>
             <span className="text-xs font-semibold text-yellow-700">완성 보너스!</span>
           </div>
         </div>
@@ -197,7 +197,7 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
               ref={followUpRef}
               value={followUpAnswer}
               onChange={e => setFollowUpAnswer(e.target.value)}
-              placeholder="답을 적으면 +20🪙 추가로 받을 수 있어요..."
+              placeholder="답을 적으면 +8🪙 추가로 받을 수 있어요..."
               rows={3}
               className="w-full px-3 py-2.5 text-sm text-gray-700 placeholder-gray-300
                          bg-lavender/5 rounded-xl border border-lavender/20
@@ -230,7 +230,7 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
                   ? 'bg-lavender text-white shadow-md shadow-lavender/30'
                   : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
             >
-              {loading ? '저장 중...' : '답하고 +20🪙 받기 🐱'}
+              {loading ? '저장 중...' : '답하고 +8🪙 받기 🐱'}
             </button>
           </div>
         </div>
