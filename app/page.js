@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
+import { headers } from 'next/headers'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { getCatEmotionalState } from '@/lib/catGrowthService'
@@ -30,9 +31,10 @@ export default async function HomePage() {
   })
   const hasWrittenToday = !!todayEntry
 
+  const locale = headers().get('x-locale') ?? 'ko'
   const emotionalState = getCatEmotionalState(cat, hasWrittenToday)
-  const prompt = getTodayPrompt()
-  const season = getCurrentSeason()
+  const prompt = getTodayPrompt(locale)
+  const season = getCurrentSeason(locale)
   const isPremium = !!(user?.isPremium && user?.premiumUntil && new Date(user.premiumUntil) > new Date())
 
   // JSON 직렬화를 위해 Date → string 변환
