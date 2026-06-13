@@ -1,10 +1,13 @@
+'use client'
+
+import { useLanguage } from '@/components/shared/LanguageProvider'
 import { STAGE_CONFIG, DAYS_PER_STAGE } from '@/lib/catGrowthService'
 
-// Natural cat growth journey — clearly shows what comes next
-const STAGE_EMOJI  = ['🐣', '🐱', '🐈', '😸', '🦁', '👑']
-const STAGE_LABEL  = ['아기', '아기 고양이', '청소년', '성인', '현명한 고양이', '전설']
+const STAGE_EMOJI = ['🐣', '🐱', '🐈', '😸', '🦁', '👑']
 
 export default function StreakCounter({ currentStreak, totalDaysWritten }) {
+  const { t } = useLanguage()
+
   const currentStage = Math.min(
     Math.max(STAGE_CONFIG.findIndex(s => totalDaysWritten < s.minDays + DAYS_PER_STAGE) - 1, 0),
     5
@@ -25,9 +28,9 @@ export default function StreakCounter({ currentStreak, totalDaysWritten }) {
         <span className="text-2xl">{currentStreak > 0 ? '🔥' : '💤'}</span>
         <div>
           <p className="text-lg font-extrabold text-gray-800 leading-none">
-            {currentStreak}<span className="text-sm font-semibold text-gray-500 ml-0.5">일</span>
+            {currentStreak}<span className="text-sm font-semibold text-gray-500 ml-0.5">{t.cat.streakUnit}</span>
           </p>
-          <p className="text-[11px] text-gray-400 mt-0.5 font-medium">연속 작성</p>
+          <p className="text-[11px] text-gray-400 mt-0.5 font-medium">{t.cat.streak}</p>
         </div>
       </div>
 
@@ -36,15 +39,12 @@ export default function StreakCounter({ currentStreak, totalDaysWritten }) {
         {isLegendary ? (
           <div className="flex items-center justify-center gap-2">
             <span className="text-2xl">👑</span>
-            <p className="text-sm font-bold text-lavender">전설의 고양이!</p>
+            <p className="text-sm font-bold text-lavender">{t.cat.legendary}</p>
             <span className="text-2xl">✨</span>
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            {/* Current stage */}
             <span className="text-2xl flex-shrink-0">{curEmoji}</span>
-
-            {/* Progress bar only — no text */}
             <div className="flex-1">
               <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
@@ -54,8 +54,6 @@ export default function StreakCounter({ currentStreak, totalDaysWritten }) {
                 />
               </div>
             </div>
-
-            {/* Next stage — dimmed arrow feel */}
             <span className="text-2xl flex-shrink-0 opacity-40">{nextEmoji}</span>
           </div>
         )}

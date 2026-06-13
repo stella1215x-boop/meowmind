@@ -2,9 +2,12 @@
 
 import { useState } from 'react'
 import { COIN_PACKAGES } from '@/lib/coinPackages'
+import { useLanguage } from '@/components/shared/LanguageProvider'
 
 export default function CoinPurchaseModal({ onClose }) {
-  const [loading, setLoading] = useState(null)  // packageId being processed
+  const { t } = useLanguage()
+  const C = t.coins
+  const [loading, setLoading] = useState(null)
   const [error,   setError]   = useState(null)
 
   async function handleBuy(pkg) {
@@ -18,14 +21,13 @@ export default function CoinPurchaseModal({ onClose }) {
       })
       if (!res.ok) {
         const e = await res.json()
-        setError(e.error ?? '결제를 시작할 수 없어요')
+        setError(e.error ?? C.errStart)
         return
       }
       const { url } = await res.json()
-      // Redirect to Stripe Checkout
       window.location.href = url
     } catch {
-      setError('네트워크 오류가 발생했어요')
+      setError(C.errNetwork)
     } finally {
       setLoading(null)
     }
@@ -48,10 +50,8 @@ export default function CoinPurchaseModal({ onClose }) {
         <div className="px-6 py-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-extrabold text-gray-800">🪙 코인 충전</h2>
-              <p className="text-xs text-gray-400 mt-0.5">
-                코인으로 고양이에게 사랑을 표현해요
-              </p>
+              <h2 className="text-lg font-extrabold text-gray-800">{C.title}</h2>
+              <p className="text-xs text-gray-400 mt-0.5">{C.subtitle}</p>
             </div>
             <button onClick={onClose}
               className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center
@@ -74,10 +74,7 @@ export default function CoinPurchaseModal({ onClose }) {
                   ? 'border-lavender bg-lavender/5 opacity-80'
                   : 'border-gray-100 bg-white hover:border-lavender/40 hover:bg-lavender/5 shadow-sm'}`}
             >
-              {/* Emoji */}
               <span className="text-3xl flex-shrink-0">{pkg.emoji}</span>
-
-              {/* Info */}
               <div className="flex-1 text-left">
                 <div className="flex items-center gap-2">
                   <p className="font-extrabold text-gray-800">{pkg.label}</p>
@@ -90,11 +87,9 @@ export default function CoinPurchaseModal({ onClose }) {
                 </div>
                 <p className="text-xs text-gray-400 mt-0.5">{pkg.description}</p>
               </div>
-
-              {/* Price */}
               <div className="flex-shrink-0 text-right">
                 {loading === pkg.id ? (
-                  <span className="text-sm text-lavender font-bold">결제 중...</span>
+                  <span className="text-sm text-lavender font-bold">{C.processing}</span>
                 ) : (
                   <>
                     <p className="font-extrabold text-lavender text-base">
@@ -110,18 +105,15 @@ export default function CoinPurchaseModal({ onClose }) {
           ))}
         </div>
 
-        {/* Error */}
         {error && (
           <div className="mx-5 mb-2 px-4 py-2.5 bg-red-50 rounded-2xl text-xs text-red-500 font-semibold">
             {error}
           </div>
         )}
 
-        {/* Footer note */}
         <div className="px-5 pb-6 pt-1">
-          <p className="text-[10px] text-gray-400 text-center leading-relaxed">
-            안전한 결제 · 카드/KakaoPay/Naver Pay 지원<br />
-            결제 후 즉시 코인이 지급됩니다
+          <p className="text-[10px] text-gray-400 text-center leading-relaxed whitespace-pre-line">
+            {C.footer}
           </p>
         </div>
       </div>

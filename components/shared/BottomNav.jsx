@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useLanguage } from '@/components/shared/LanguageProvider'
 
-const NAV_ITEMS = [
+const NAV_DEFS = [
   {
     href: '/',
-    label: '홈',
+    key: 'home',
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
         <path d="M3 12L12 3l9 9" stroke={active ? '#C3B1E1' : '#9CA3AF'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -16,7 +17,7 @@ const NAV_ITEMS = [
   },
   {
     href: '/history',
-    label: '히스토리',
+    key: 'history',
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
         <rect x="3" y="4" width="18" height="18" rx="2" stroke={active ? '#C3B1E1' : '#9CA3AF'} strokeWidth="2"/>
@@ -29,7 +30,7 @@ const NAV_ITEMS = [
   },
   {
     href: '/insights',
-    label: '인사이트',
+    key: 'insights',
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
         <path d="M4 20V14M8 20V10M12 20V4M16 20V12M20 20V8" stroke={active ? '#C3B1E1' : '#9CA3AF'} strokeWidth="2" strokeLinecap="round"/>
@@ -38,7 +39,7 @@ const NAV_ITEMS = [
   },
   {
     href: '/settings',
-    label: '설정',
+    key: 'settings',
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="3" stroke={active ? '#C3B1E1' : '#9CA3AF'} strokeWidth="2"/>
@@ -50,12 +51,13 @@ const NAV_ITEMS = [
 
 export default function BottomNav({ totalDaysWritten = 0 }) {
   const pathname = usePathname()
+  const { t } = useLanguage()
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 flex justify-center">
       <div className="w-full max-w-mobile bg-white/90 backdrop-blur-md border-t border-gray-100 safe-bottom">
         <div className="flex">
-          {NAV_ITEMS.map(({ href, label, icon }) => {
+          {NAV_DEFS.map(({ href, key, icon }) => {
             const isActive = pathname === href
             const isLocked = href === '/insights' && totalDaysWritten < 3
 
@@ -70,7 +72,7 @@ export default function BottomNav({ totalDaysWritten = 0 }) {
               >
                 {icon(isActive)}
                 <span className={`text-[10px] font-semibold ${isActive ? 'text-lavender' : 'text-gray-400'}`}>
-                  {isLocked ? '🔒' : label}
+                  {isLocked ? '🔒' : t.nav[key]}
                 </span>
               </Link>
             )

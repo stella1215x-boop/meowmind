@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import useCatStore from '@/store/useCatStore'
+import { useLanguage } from '@/components/shared/LanguageProvider'
 import { getStageLabel } from '@/lib/catGrowthService'
 
 const STAGE_EMOJI = ['🐣', '🐱', '🐈', '😸', '🦁', '👑']
-const HASHTAGS    = '#MeowMind #감사일기 #오늘의고양이 #마음챙김 #gratitude'
 
 function getTodayLabel() {
   const d = new Date()
@@ -13,7 +13,6 @@ function getTodayLabel() {
   return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} (${days[d.getDay()]})`
 }
 
-// ── Fetch today's sentences from API (fallback when store is empty) ────────────
 async function fetchTodaySentences() {
   try {
     const res = await fetch('/api/journal?page=1&limit=1')
@@ -27,7 +26,6 @@ async function fetchTodaySentences() {
   } catch { return [] }
 }
 
-// ── Draw share card on canvas (no DOM, no visibility issues) ─────────────────
 function drawRoundRect(ctx, x, y, w, h, r) {
   ctx.beginPath()
   ctx.moveTo(x + r, y)
@@ -43,7 +41,6 @@ function drawRoundRect(ctx, x, y, w, h, r) {
 }
 
 function wrapText(ctx, text, x, y, maxW, lineH) {
-  const words = text.split('')
   let line = ''
   let curY = y
   for (const ch of text) {
@@ -58,7 +55,6 @@ function wrapText(ctx, text, x, y, maxW, lineH) {
   return curY + lineH
 }
 
-// Capture the Rive canvas element currently on screen
 async function captureRiveCat() {
   try {
     const riveCanvas = document.querySelector('canvas')
@@ -70,7 +66,6 @@ async function captureRiveCat() {
   } catch { return null }
 }
 
-// Load an image blob into an HTMLImageElement
 function loadImage(blob) {
   return new Promise(resolve => {
     const img = new Image()
@@ -81,26 +76,24 @@ function loadImage(blob) {
   })
 }
 
-async function buildShareImage(cat, sentences) {
-  // ── Canvas: 1080×1920 (Instagram Stories 9:16) ───────────────────────────
+async function buildShareImage(cat, sentences, t) {
   const W = 1080, H = 1920
   const PAD = 72
 
   const stageEmoji = STAGE_EMOJI[Math.min(cat?.stage ?? 0, 5)]
-  const catName    = cat?.name ?? '고양이'
+  const catName    = cat?.name ?? t.cat.defaultName
   const stageLabel = getStageLabel(cat?.stage ?? 0)
   const today      = getTodayLabel()
   const sentList   = sentences.filter(Boolean)
 
-  // Capture cat image in parallel while building canvas
-  const catBlob  = await captureRiveCat()
-  const catImg   = catBlob ? await loadImage(catBlob) : null
+  const catBlob = await captureRiveCat()
+  const catImg  = catBlob ? await loadImage(catBlob) : null
 
   const canvas = document.createElement('canvas')
   canvas.width = W; canvas.height = H
   const ctx = canvas.getContext('2d')
 
-  // ── TOP HALF: gradient background + cat image ──────────────────────────
+  // Top gradient
   const topH = 800
   const grad = ctx.createLinearGradient(0, 0, W, topH)
   grad.addColorStop(0, '#7c3aed')
@@ -108,12 +101,11 @@ async function buildShareImage(cat, sentences) {
   ctx.fillStyle = grad
   ctx.fillRect(0, 0, W, topH)
 
-  // Draw cat image (from Rive canvas), centered in top half
+  // Cat image
   const catSize = 600
   const catX    = (W - catSize) / 2
   const catY    = 60
   if (catImg) {
-    // White circle backdrop
     ctx.save()
     ctx.beginPath()
     ctx.arc(W / 2, catY + catSize / 2, catSize / 2 + 20, 0, Math.PI * 2)
@@ -122,27 +114,26 @@ async function buildShareImage(cat, sentences) {
     ctx.restore()
     ctx.drawImage(catImg, catX, catY, catSize, catSize)
   } else {
-    // Fallback: large stage emoji
     ctx.font = '320px serif'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText(stageEmoji, W / 2, catY + catSize / 2)
   }
 
-  // meow-mind brand in top section
+  // Brand
   ctx.font = 'bold 44px -apple-system, sans-serif'
   ctx.fillStyle = 'rgba(255,255,255,0.9)'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'alphabetic'
   ctx.fillText('meow-mind 🐱', W / 2, topH - 30)
 
-  // ── BOTTOM HALF: white rounded card ────────────────────────────────────
-  const cardY = topH - 60   // overlaps top slightly
+  // White card
+  const cardY = topH - 60
   ctx.fillStyle = '#ffffff'
   drawRoundRect(ctx, 0, cardY, W, H - cardY, 60)
   ctx.fill()
 
-  // Cat name + stage emoji row
+  // Cat name row
   const nameY = cardY + 100
   ctx.font = '100px serif'
   ctx.textAlign = 'left'
@@ -153,12 +144,11 @@ async function buildShareImage(cat, sentences) {
   ctx.fillStyle = '#1f2937'
   ctx.fillText(catName, PAD + 130, nameY - 10)
 
-  // Stage + date
   ctx.font = '48px -apple-system, sans-serif'
   ctx.fillStyle = '#9ca3af'
   ctx.fillText(`${stageLabel} · ${today}`, PAD + 130, nameY + 58)
 
-  // Thin divider
+  // Divider
   const divY = nameY + 110
   ctx.strokeStyle = '#f3f4f6'
   ctx.lineWidth = 3
@@ -172,7 +162,6 @@ async function buildShareImage(cat, sentences) {
   ctx.textAlign = 'left'
 
   for (let i = 0; i < Math.min(sentList.length, 3); i++) {
-    // Number pill
     ctx.fillStyle = '#ede9fe'
     drawRoundRect(ctx, PAD, y - 50, 72, 64, 16)
     ctx.fill()
@@ -181,7 +170,6 @@ async function buildShareImage(cat, sentences) {
     ctx.textAlign = 'center'
     ctx.fillText(nums[i], PAD + 36, y)
 
-    // Sentence text
     ctx.font = '46px -apple-system, sans-serif'
     ctx.fillStyle = '#374151'
     ctx.textAlign = 'left'
@@ -189,14 +177,16 @@ async function buildShareImage(cat, sentences) {
     y += 28
   }
 
-  // Hashtags — ensure they fit within card
-  const hashY = Math.max(y + 60, H - 140)
+  // Hashtags — split locale hashtags into two canvas lines
+  const hashStr   = t.share.hashtags
+  const hashParts = hashStr.split(' ')
+  const mid       = Math.ceil(hashParts.length / 2)
+  const tags1     = hashParts.slice(0, mid).join(' ')
+  const tags2     = hashParts.slice(mid).join(' ')
+  const hashY     = Math.max(y + 60, H - 140)
   ctx.font = '38px -apple-system, sans-serif'
   ctx.fillStyle = '#a78bfa'
   ctx.textAlign = 'center'
-  // Split into two lines if needed
-  const tags1 = '#MeowMind #감사일기 #오늘의고양이'
-  const tags2 = '#마음챙김 #gratitude'
   ctx.fillText(tags1, W / 2, hashY)
   ctx.fillText(tags2, W / 2, hashY + 52)
 
@@ -207,11 +197,13 @@ async function buildShareImage(cat, sentences) {
 
 export default function ShareButton({ sentences: propSentences }) {
   const { cat, todaySentences } = useCatStore()
+  const { t } = useLanguage()
+  const S = t.share
+
   const [open,    setOpen]    = useState(false)
   const [loading, setLoading] = useState(false)
-  const [preview, setPreview] = useState(null)    // blob URL for preview
+  const [preview, setPreview] = useState(null)
 
-  // Resolve sentences: prop → store → API
   const hasProp  = (propSentences?.filter(Boolean).length ?? 0) > 0
   const hasStore = (todaySentences?.filter(Boolean).length ?? 0) > 0
 
@@ -224,10 +216,9 @@ export default function ShareButton({ sentences: propSentences }) {
   async function handleOpen() {
     setOpen(v => !v)
     if (preview) return
-    // Build preview immediately
     setLoading(true)
     const sents = await resolveSentences()
-    const blob  = await buildShareImage(cat, sents)
+    const blob  = await buildShareImage(cat, sents, t)
     if (blob) setPreview(URL.createObjectURL(blob))
     setLoading(false)
   }
@@ -238,19 +229,23 @@ export default function ShareButton({ sentences: propSentences }) {
       const sents = await resolveSentences()
       const blob  = preview
         ? await fetch(preview).then(r => r.blob())
-        : await buildShareImage(cat, sents)
+        : await buildShareImage(cat, sents, t)
+
+      const catName    = cat?.name ?? t.cat.defaultName
+      const stageEmoji = STAGE_EMOJI[Math.min(cat?.stage ?? 0, 5)]
+      const stageLabel = getStageLabel(cat?.stage ?? 0)
 
       const shareText = [
-        `${STAGE_EMOJI[Math.min(cat?.stage ?? 0, 5)]} ${cat?.name ?? '고양이'} · ${getStageLabel(cat?.stage ?? 0)}`,
+        `${stageEmoji} ${catName} · ${stageLabel}`,
         `📅 ${getTodayLabel()}`,
         '',
         ...sents.map((s, i) => `${['①','②','③'][i]} ${s}`),
         '',
-        HASHTAGS,
+        S.hashtags,
       ].join('\n')
 
       if (platform === 'native' && navigator.share) {
-        const sd = { title: `${cat?.name ?? '고양이'}의 감사일기 🐱`, text: shareText }
+        const sd = { title: S.journalTitle(catName), text: shareText }
         if (blob) {
           const file = new File([blob], 'meowmind.png', { type: 'image/png' })
           if (navigator.canShare?.({ files: [file] })) sd.files = [file]
@@ -266,7 +261,7 @@ export default function ShareButton({ sentences: propSentences }) {
           }
         }
         navigator.clipboard?.writeText(shareText)
-        alert('텍스트를 복사했어요!\nInstagram에 붙여넣기 해주세요 📋')
+        alert(S.instagramCopied)
         window.open('https://www.instagram.com/', '_blank')
 
       } else if (platform === 'x') {
@@ -276,8 +271,8 @@ export default function ShareButton({ sentences: propSentences }) {
       setOpen(false)
     } catch (err) {
       if (err?.name !== 'AbortError') {
-        navigator.clipboard?.writeText(HASHTAGS)
-        alert('공유 중 오류가 발생했어요. 텍스트를 복사했어요!')
+        navigator.clipboard?.writeText(S.hashtags)
+        alert(S.shareError)
       }
     } finally {
       setLoading(false)
@@ -287,7 +282,6 @@ export default function ShareButton({ sentences: propSentences }) {
   return (
     <div className="flex justify-center">
 
-      {/* ── Centered modal overlay ── */}
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-5
                         bg-black/40 backdrop-blur-sm"
@@ -296,24 +290,21 @@ export default function ShareButton({ sentences: propSentences }) {
                           overflow-hidden animate-milestone-pop"
                onClick={e => e.stopPropagation()}>
 
-            {/* Image preview — scrollable if tall */}
             <div className="max-h-[55vh] overflow-y-auto">
               {loading && (
                 <div className="h-48 flex flex-col items-center justify-center gap-2 text-gray-400">
                   <span className="text-3xl animate-pulse">✨</span>
-                  <span className="text-sm font-medium">카드 생성 중...</span>
+                  <span className="text-sm font-medium">{S.generating}</span>
                 </div>
               )}
               {preview && !loading && (
-                <img src={preview} alt="공유 카드 미리보기"
-                  className="w-full" />
+                <img src={preview} alt={S.altText} className="w-full" />
               )}
             </div>
 
-            {/* Share buttons */}
             <div className="p-5 border-t border-gray-100">
               <p className="text-xs text-gray-400 text-center mb-4 font-medium">
-                공유할 플랫폼을 선택하세요
+                {S.platform}
               </p>
               <div className="flex gap-4 justify-center">
                 {typeof navigator !== 'undefined' && navigator.share && (
@@ -323,7 +314,7 @@ export default function ShareButton({ sentences: propSentences }) {
                                     flex items-center justify-center shadow-md">
                       <span className="text-2xl">📤</span>
                     </div>
-                    <span className="text-xs font-semibold text-gray-600">공유</span>
+                    <span className="text-xs font-semibold text-gray-600">{S.native}</span>
                   </button>
                 )}
 
@@ -352,7 +343,7 @@ export default function ShareButton({ sentences: propSentences }) {
               <button onClick={() => setOpen(false)}
                 className="mt-4 w-full py-2.5 rounded-2xl text-sm font-semibold
                            text-gray-400 bg-gray-50 active:scale-95 transition-all">
-                닫기
+                {S.close}
               </button>
             </div>
           </div>
@@ -366,7 +357,7 @@ export default function ShareButton({ sentences: propSentences }) {
                    shadow-lavender/30 active:scale-95 transition-all hover:opacity-90"
       >
         <span className="text-lg">📤</span>
-        <span>공유하기</span>
+        <span>{S.btn}</span>
       </button>
     </div>
   )

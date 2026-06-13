@@ -4,7 +4,7 @@ const SUPPORTED_LOCALES = ['ko', 'en', 'ja']
 const DEFAULT_LOCALE    = 'ko'
 
 export function middleware(request) {
-  const { pathname, searchParams } = request.nextUrl
+  const { pathname } = request.nextUrl
 
   // Skip API routes, static files, Next.js internals
   if (
@@ -19,7 +19,7 @@ export function middleware(request) {
   }
 
   // Detect locale from URL segment (/en, /ja)
-  const segments = pathname.split('/').filter(Boolean)
+  const segments  = pathname.split('/').filter(Boolean)
   const urlLocale = SUPPORTED_LOCALES.includes(segments[0]) ? segments[0] : null
 
   // Detect from cookie
@@ -34,11 +34,29 @@ export function middleware(request) {
 
   const detectedLocale = urlLocale ?? validCookie ?? headerLocale ?? DEFAULT_LOCALE
 
-  // Pass locale to the page as a header (read by root layout)
-  const response = NextResponse.next()
-  response.headers.set('x-locale', detectedLocale)
-  response.cookies.set('MEOW_LOCALE', detectedLocale, { path: '/', maxAge: 31536000 })
+  // Build modified request headers so server components can read x-locale
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-locale', detectedLocale)
 
+  // If the URL contains a locale prefix (/en, /ja), rewrite to the real path
+  // e.g. /en/history → /history  (browser keeps /en/history, app serves /history)
+  if (urlLocale) {
+    const stripped = '/' + segments.slice(1).join('/')
+    const rewriteUrl = request.nextUrl.clone()
+    rewriteUrl.pathname = stripped || '/'
+
+    const response = NextResponse.rewrite(rewriteUrl, {
+      request: { headers: requestHeaders },
+    })
+    response.cookies.set('MEOW_LOCALE', detectedLocale, { path: '/', maxAge: 31536000 })
+    return response
+  }
+
+  // No locale prefix — just pass through with the locale header
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  })
+  response.cookies.set('MEOW_LOCALE', detectedLocale, { path: '/', maxAge: 31536000 })
   return response
 }
 

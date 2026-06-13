@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { useLanguage } from '@/components/shared/LanguageProvider'
 import CatSvg from '@/components/Cat/CatSvg'
 
-// Use the Rive character — same dynamic/ssr:false pattern as CatAnimation
 const CatRiveCharacter = dynamic(
   () => import('@/components/Cat/CatRiveCharacter'),
   { ssr: false, loading: () => <CatSvg stage={0} color="orange" mood="happy" size={108} /> }
@@ -14,6 +14,7 @@ const CONFETTI_COLORS = ['#C3B1E1', '#A8E6CF', '#FFD93D', '#FF6B6B', '#74C0FC', 
 const CONFETTI_COUNT  = 20
 
 export default function IntimacyRewardModal({ reward, cat, onClose }) {
+  const { t } = useLanguage()
   const [visible,  setVisible]  = useState(false)
   const [confetti, setConfetti] = useState([])
 
@@ -33,6 +34,12 @@ export default function IntimacyRewardModal({ reward, cat, onClose }) {
   }, [reward])
 
   if (!visible || !reward) return null
+
+  // Use locale-specific text if available, fall back to reward object text
+  const localTier = reward.tierKey ? (t.tierRewards ?? {})[reward.tierKey] : null
+  const title    = localTier?.title    ?? reward.title
+  const subtitle = localTier?.subtitle ?? reward.subtitle
+  const unlocks  = localTier?.unlocks  ?? reward.unlocks
 
   function handleClose() {
     setVisible(false)
@@ -64,48 +71,43 @@ export default function IntimacyRewardModal({ reward, cat, onClose }) {
         ))}
       </div>
 
-      {/* Modal card */}
       <div
         className={`w-full max-w-sm rounded-3xl p-7 text-center shadow-2xl
                     bg-gradient-to-b ${reward.bg ?? 'from-lavender/30 to-white'}
                     animate-milestone-pop`}
         onClick={e => e.stopPropagation()}
       >
-        {/* Big emoji + title */}
         <div className="text-5xl mb-1 animate-bounce inline-block">{reward.emoji}</div>
-        <h2 className="text-2xl font-extrabold text-gray-700 mt-1">{reward.title}</h2>
-        <p className="text-gray-500 text-sm mt-1 leading-relaxed">{reward.subtitle}</p>
+        <h2 className="text-2xl font-extrabold text-gray-700 mt-1">{title}</h2>
+        <p className="text-gray-500 text-sm mt-1 leading-relaxed">{subtitle}</p>
 
-        {/* Cat (Rive) + speech bubble */}
         <div className="my-4 flex flex-col items-center gap-2">
           <CatRiveCharacter
-            cat={cat}           // pass full cat so tier badge shows correctly
+            cat={cat}
             emotionalState="happy"
             playAnimation="purr"
           />
           <div className="bg-white rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm border border-gray-100">
             <p className="text-sm font-extrabold text-lavender">{cat?.name} 🐱</p>
-            <p className="text-xs text-gray-500 mt-0.5">우리 사이가 더 깊어졌어요 💛</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t.modal.bondsDeeper}</p>
           </div>
         </div>
 
-        {/* Coin reward */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-4 py-3 mb-3 flex items-center justify-center gap-3">
           <span className="text-3xl">🪙</span>
           <div className="text-left">
             <p className="text-2xl font-extrabold text-yellow-600 leading-none">+{reward.coins}</p>
-            <p className="text-xs text-yellow-700 font-semibold mt-0.5">친밀도 보너스 코인!</p>
+            <p className="text-xs text-yellow-700 font-semibold mt-0.5">{t.modal.bonusCoins}</p>
           </div>
         </div>
 
-        {/* Unlocked items */}
-        {reward.unlocks && (
+        {unlocks && (
           <div className="bg-white/80 rounded-2xl px-4 py-2.5 mb-5 border border-gray-100">
             <p className="text-[10px] font-extrabold text-gray-400 mb-1 tracking-widest uppercase">
-              🔓 신규 해금
+              {t.modal.unlocked}
             </p>
-            <p className="text-sm font-bold text-gray-700">{reward.unlocks}</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">상점에서 구매할 수 있어요!</p>
+            <p className="text-sm font-bold text-gray-700">{unlocks}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">{t.modal.buyInShop}</p>
           </div>
         )}
 
@@ -114,9 +116,9 @@ export default function IntimacyRewardModal({ reward, cat, onClose }) {
           className="w-full bg-lavender text-white rounded-2xl py-3.5 font-bold text-base
                      hover:opacity-90 active:scale-95 transition-all shadow-md"
         >
-          계속하기 🐾
+          {t.modal.continue}
         </button>
-        <p className="text-xs text-gray-400 mt-3">화면을 탭해도 닫힙니다</p>
+        <p className="text-xs text-gray-400 mt-3">{t.modal.tapToClose}</p>
       </div>
     </div>
   )

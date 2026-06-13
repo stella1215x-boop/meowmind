@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import useCatStore from '@/store/useCatStore'
+import { useLanguage } from '@/components/shared/LanguageProvider'
 import ShareButton from '@/components/shared/ShareButton'
 
 function getTodayLabel() {
@@ -10,14 +11,10 @@ function getTodayLabel() {
   return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}. ${days[d.getDay()]}`
 }
 
-const FIELD_CONFIG = [
-  { label: '첫 번째 감사한 것', placeholder: '오늘 감사했던 순간을 한 문장으로...' },
-  { label: '두 번째 감사한 것', placeholder: '또 다른 감사한 것이 있나요?' },
-  { label: '세 번째 감사한 것', placeholder: '마지막으로 하나 더 떠올려보세요 🌱' },
-]
-
 export default function JournalForm({ prompt, onSubmit, cat }) {
   const { addCoinsOptimistic } = useCatStore()
+  const { t } = useLanguage()
+  const L = t.journal
 
   const [sentences,      setSentences]      = useState(['', '', ''])
   const [done,           setDone]           = useState([false, false, false])
@@ -32,38 +29,26 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
   const allDone   = done.every(Boolean)
   const canAnswer = followUpAnswer.trim().length >= 5
 
-  // ── Sentence update ──────────────────────────────────────────────────────
   function updateSentence(i, value) {
     setSentences(prev => { const n = [...prev]; n[i] = value; return n })
-    // Undone if user edits below threshold
     if (done[i] && value.trim().length < 5) {
       setDone(prev => { const n = [...prev]; n[i] = false; return n })
     }
   }
 
-  // ── Complete one sentence ────────────────────────────────────────────────
   function handleComplete(i) {
     if (done[i] || sentences[i].trim().length < 5) return
 
     const newDone = done.map((d, idx) => (idx === i ? true : d))
     setDone(newDone)
-
-    // Trigger coin pop animation (new key → React remounts → animation reruns)
     setCoinPopKeys(prev => { const n = [...prev]; n[i] = Date.now(); return n })
-
-    // ★ Optimistically update the coin counter in the store immediately
     addCoinsOptimistic(5)
 
     if (newDone.every(Boolean)) {
-      // Show bonus badge (+10), update coins, then slide in follow-up question
-      setTimeout(() => {
-        setBonusVisible(true)
-        // completion bonus removed
-      }, 300)
+      setTimeout(() => setBonusVisible(true), 300)
       setTimeout(() => setPhase('followup'), 1400)
       setTimeout(() => followUpRef.current?.focus(), 1600)
     } else {
-      // Auto-focus next incomplete field
       const nextIdx = newDone.findIndex((d, idx) => !d && idx > i)
       const fallback = newDone.findIndex(d => !d)
       const target   = nextIdx >= 0 ? nextIdx : fallback
@@ -71,17 +56,14 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
     }
   }
 
-  // ── Submit ───────────────────────────────────────────────────────────────
   async function handleSubmit(withAnswer) {
     if (loading) return
-    // Optimistically show the follow-up bonus before the API round-trip
     if (withAnswer && canAnswer) addCoinsOptimistic(8)
     setLoading(true)
     await onSubmit(sentences, withAnswer && canAnswer ? followUpAnswer : null)
     setLoading(false)
   }
 
-  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="space-y-3">
 
@@ -95,7 +77,7 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
         const isDone      = done[i]
         const canComplete = s.trim().length >= 5 && !isDone
         const isLocked    = isDone || phase === 'followup'
-        const { label, placeholder } = FIELD_CONFIG[i]
+        const { label, placeholder } = L.fields[i]
 
         return (
           <div
@@ -107,7 +89,6 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
                 ? 'border-gray-100 opacity-70'
                 : 'border-gray-100 shadow-sm'}`}
           >
-            {/* Coin pop (+5🪙 floats up on complete) */}
             {coinPopKeys[i] && (
               <span
                 key={coinPopKeys[i]}
@@ -118,7 +99,6 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
               </span>
             )}
 
-            {/* Header row */}
             <div className="flex items-center gap-2 px-4 pt-3 pb-1">
               <span className={`w-5 h-5 rounded-full text-xs flex items-center justify-center
                                font-bold flex-shrink-0 transition-all duration-200
@@ -128,7 +108,7 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
               <span className="text-xs text-gray-400 flex-1">{label}</span>
 
               {isDone ? (
-                <span className="text-[11px] font-bold text-mint">완료 ✓</span>
+                <span className="text-[11px] font-bold text-mint">{L.completed}</span>
               ) : canComplete ? (
                 <button
                   type="button"
@@ -136,7 +116,7 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
                   className="text-[11px] font-extrabold text-white bg-yellow-400 px-2.5 py-1
                              rounded-lg active:scale-95 transition-transform hover:bg-yellow-500"
                 >
-                  완료 🪙
+                  {L.complete}
                 </button>
               ) : (
                 s.length > 0 && (
@@ -145,7 +125,6 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
               )}
             </div>
 
-            {/* Textarea */}
             <textarea
               ref={el => (textareaRefs.current[i] = el)}
               value={s}
@@ -173,7 +152,7 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
           <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200
                           rounded-full px-4 py-1.5">
             <span className="text-base font-extrabold text-yellow-500">+5🪙</span>
-            <span className="text-xs font-semibold text-yellow-700">완성 보너스!</span>
+            <span className="text-xs font-semibold text-yellow-700">{L.bonusLabel}</span>
           </div>
         </div>
       )}
@@ -183,21 +162,19 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
         <div className="bg-white rounded-2xl border-2 border-lavender/40 shadow-md
                         p-4 space-y-3 animate-milestone-pop">
 
-          {/* Question header + text */}
           <div>
             <p className="text-[11px] font-extrabold text-lavender mb-1.5 tracking-wide">
-              💬 오늘의 질문
+              {L.followTitle}
             </p>
             <p className="text-sm text-gray-700 font-medium leading-relaxed">{prompt}</p>
           </div>
 
-          {/* Answer textarea */}
           <div className="relative">
             <textarea
               ref={followUpRef}
               value={followUpAnswer}
               onChange={e => setFollowUpAnswer(e.target.value)}
-              placeholder="답을 적으면 +8🪙 추가로 받을 수 있어요..."
+              placeholder={L.followPH}
               rows={3}
               className="w-full px-3 py-2.5 text-sm text-gray-700 placeholder-gray-300
                          bg-lavender/5 rounded-xl border border-lavender/20
@@ -210,7 +187,6 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
             )}
           </div>
 
-          {/* Action buttons */}
           <div className="flex gap-2">
             <button
               type="button"
@@ -219,7 +195,7 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
               className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-400
                          bg-gray-50 border border-gray-100 active:scale-95 transition-all"
             >
-              건너뛸게요
+              {L.skip}
             </button>
             <button
               type="button"
@@ -230,7 +206,7 @@ export default function JournalForm({ prompt, onSubmit, cat }) {
                   ? 'bg-lavender text-white shadow-md shadow-lavender/30'
                   : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
             >
-              {loading ? '저장 중...' : '답하고 +8🪙 받기 🐱'}
+              {loading ? L.saving : L.answerBtn}
             </button>
           </div>
         </div>

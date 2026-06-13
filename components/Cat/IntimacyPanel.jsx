@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import useCatStore from '@/store/useCatStore'
+import { useLanguage } from '@/components/shared/LanguageProvider'
 
 export default function IntimacyPanel() {
   const { doInteract, playAnimation } = useCatStore()
+  const { t } = useLanguage()
   const [popup, setPopup] = useState(null)
   const isBusy = !!playAnimation
 
@@ -19,7 +21,6 @@ export default function IntimacyPanel() {
 
   return (
     <div className="relative flex flex-col items-center">
-      {/* Coin pop */}
       {popup && (
         <div className="absolute -top-8 left-1/2 -translate-x-1/2
                         text-sm font-extrabold text-yellow-500
@@ -28,7 +29,6 @@ export default function IntimacyPanel() {
         </div>
       )}
 
-      {/* Single play button */}
       <button
         onClick={handlePlay}
         disabled={isBusy}
@@ -38,7 +38,7 @@ export default function IntimacyPanel() {
                     ${isBusy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <span className="text-xl">🧶</span>
-        <span className="text-[10px] font-bold text-white mt-0.5">놀아주기</span>
+        <span className="text-[10px] font-bold text-white mt-0.5">{t.cat.playBtn}</span>
       </button>
     </div>
   )

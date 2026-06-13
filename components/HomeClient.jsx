@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import useCatStore from '@/store/useCatStore'
+import { useLanguage } from '@/components/shared/LanguageProvider'
 import CatAnimation from '@/components/Cat/CatAnimation'
 import IntimacyPanel from '@/components/Cat/IntimacyPanel'
 import RightInventoryPanel from '@/components/Cat/RightInventoryPanel'
@@ -20,6 +21,7 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
   const isWelcome      = searchParams.get('welcome')  === '1'
   const purchaseResult = searchParams.get('purchase')
   const coinsAdded     = searchParams.get('coins')
+  const { t } = useLanguage()
 
   const {
     cat, emotionalState, hasWrittenToday,
@@ -44,7 +46,7 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
       body: JSON.stringify({ sentences, followUpAnswer }),
     })
     if (res.status === 409) { onJournalSubmitted(activeCat, null, 0, 0, null, sentences); return }
-    if (!res.ok) { alert('저장 중 오류가 생겼어요. 다시 시도해 주세요.'); return }
+    if (!res.ok) { alert(t.home.saveError); return }
     const data = await res.json()
     onJournalSubmitted(data.cat, data.milestone, data.coinsEarned ?? 0, data.streakBonus ?? 0, data.tierReward ?? null, sentences)
     void fetch('/api/events', {
@@ -64,14 +66,14 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
         {isWelcome && (
           <div className="mb-1.5 bg-lavender/10 rounded-xl p-2 text-center animate-milestone-pop">
             <p className="text-xs font-semibold text-lavender">
-              🎉 {activeCat?.name}와 함께하는 첫날이에요!
+              {t.home.welcome(activeCat?.name)}
             </p>
           </div>
         )}
         {purchaseResult === 'success' && coinsAdded && (
           <div className="mb-1.5 bg-yellow-50 border border-yellow-200 rounded-xl p-2 text-center animate-milestone-pop">
             <p className="text-sm font-extrabold text-yellow-600">
-              🪙 +{coinsAdded} 코인 충전 완료! 감사합니다 💕
+              {t.home.purchaseSuccess(coinsAdded)}
             </p>
           </div>
         )}
@@ -135,17 +137,19 @@ export default function HomeClient({ cat: initialCat, emotionalState: initialSta
 
 
 function WrittenTodayMessage({ cat }) {
+  const { t } = useLanguage()
+  const L = t.journal
   return (
     <div className="flex flex-col items-center text-center space-y-4 py-6">
       <div className="text-5xl animate-float">✨</div>
       <div>
-        <h3 className="text-xl font-extrabold text-gray-700">오늘 일지를 완료했어요!</h3>
-        <p className="text-gray-500 text-sm mt-2 leading-relaxed">
-          {cat?.name}가 행복해하고 있어요 🐱<br />내일 또 만나요!
+        <h3 className="text-xl font-extrabold text-gray-700">{L.writtenTitle}</h3>
+        <p className="text-gray-500 text-sm mt-2 leading-relaxed whitespace-pre-line">
+          {L.writtenBody(cat?.name)}
         </p>
       </div>
       <div className="w-full bg-mint/20 rounded-2xl p-3">
-        <p className="text-xs text-gray-500">매일 꾸준히 10일 쓰면 {cat?.name}가 성장해요 🌱</p>
+        <p className="text-xs text-gray-500">{L.growHint(cat?.name)}</p>
       </div>
       <ShareButton sentences={[]} />
     </div>

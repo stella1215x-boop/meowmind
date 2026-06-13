@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import useCatStore from '@/store/useCatStore'
+import { useLanguage } from '@/components/shared/LanguageProvider'
 import { normalizeInventory, SHOP_ITEMS } from '@/lib/shopCatalog'
 import { getIntimacyTier } from '@/lib/catGrowthService'
 import { FeedingReaction } from './CatEmotionReaction'
@@ -9,7 +10,7 @@ import dynamic from 'next/dynamic'
 
 const CoinPanel = dynamic(() => import('./CoinPanel'), {
   ssr: false,
-  loading: () => <div className="p-4 text-center text-xs text-gray-400">로딩 중…</div>,
+  loading: () => <div className="p-4 text-center text-xs text-gray-400">…</div>,
 })
 
 const CoinPurchaseModal = dynamic(() => import('@/components/shared/CoinPurchaseModal'), {
@@ -18,6 +19,9 @@ const CoinPurchaseModal = dynamic(() => import('@/components/shared/CoinPurchase
 
 export default function RightInventoryPanel() {
   const { cat, feedCat, consumeItem, playAnimation } = useCatStore()
+  const { t } = useLanguage()
+  const S = t.store
+
   const [pantryOpen,    setPantryOpen]    = useState(false)
   const [shopOpen,      setShopOpen]      = useState(false)
   const [coinBuyOpen,   setCoinBuyOpen]   = useState(false)
@@ -48,7 +52,7 @@ export default function RightInventoryPanel() {
     setFeeding(true)
     setPantryOpen(false)
     await feedCat()
-    setShowReaction(true)  // trigger emotion reaction
+    setShowReaction(true)
     setTimeout(() => setFeeding(false), 2600)
   }
 
@@ -56,22 +60,19 @@ export default function RightInventoryPanel() {
     if (isBusy) return
     setPantryOpen(false)
     const result = await consumeItem(itemId, null)
-    if (result?.success !== false) flash('+친밀도 💛')
+    if (result?.success !== false) flash(S.intimacyToast)
   }
 
   return (
     <>
-      {/* Coin purchase modal */}
       {coinBuyOpen && <CoinPurchaseModal onClose={() => setCoinBuyOpen(false)} />}
 
-      {/* Feeding emotion reaction — overlays the cat area */}
       <FeedingReaction
         tierKey={tierKey}
         show={showReaction}
         onDone={() => setShowReaction(false)}
       />
 
-      {/* Toast */}
       {toast && (
         <div className="absolute right-2 -top-8 text-sm font-bold text-lavender
                         animate-coin-pop pointer-events-none select-none z-20">
@@ -79,10 +80,10 @@ export default function RightInventoryPanel() {
         </div>
       )}
 
-      {/* ── Button column — emoji only, no text ── */}
+      {/* ── Button column ── */}
       <div className="flex flex-col gap-2 items-center">
 
-        {/* 🪙 Coins — tap to buy more */}
+        {/* 🪙 Coins */}
         <button
           onClick={() => setCoinBuyOpen(true)}
           className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl
@@ -93,7 +94,7 @@ export default function RightInventoryPanel() {
           <span className="text-[11px] font-extrabold text-yellow-600">{coins}</span>
         </button>
 
-        {/* 🐟 Pantry (fish = cat food storage) */}
+        {/* 🐟 Pantry */}
         <button
           onClick={() => { setPantryOpen(v => !v); setShopOpen(false) }}
           className={`relative w-14 h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5
@@ -132,20 +133,19 @@ export default function RightInventoryPanel() {
           <div className="absolute right-0 top-0 z-50 w-52
                           bg-white rounded-2xl shadow-2xl border border-gray-100
                           p-3 animate-milestone-pop">
-            <p className="text-sm font-extrabold text-gray-600 mb-2">🐟 보관함</p>
+            <p className="text-sm font-extrabold text-gray-600 mb-2">{S.pantryTitle}</p>
 
             {totalItems === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-3">아직 비어있어요</p>
+              <p className="text-sm text-gray-400 text-center py-3">{S.empty}</p>
             ) : (
               <div className="space-y-2">
 
-                {/* Food — with feed button */}
                 {foodCount > 0 && (
                   <div className="flex items-center gap-2 px-2 py-2
                                   bg-orange-50 rounded-xl border border-orange-100">
                     <span className="text-xl">🐟</span>
                     <div className="flex-1">
-                      <p className="text-sm font-bold text-gray-700">음식</p>
+                      <p className="text-sm font-bold text-gray-700">{S.categories.food}</p>
                     </div>
                     <span className="text-sm font-extrabold text-orange-500 mr-1">×{foodCount}</span>
                     <button
@@ -156,12 +156,11 @@ export default function RightInventoryPanel() {
                           ? 'bg-mint/40 text-green-700 hover:bg-mint/60'
                           : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
                     >
-                      {feeding ? '먹는 중' : '먹이기 ▶'}
+                      {feeding ? S.eating : S.feedBtn}
                     </button>
                   </div>
                 )}
 
-                {/* Consumable items */}
                 {ownedConsumables.map(item => (
                   <div key={item.id}
                     className="flex items-center gap-2 px-2 py-2
@@ -177,7 +176,7 @@ export default function RightInventoryPanel() {
                       className="text-xs font-bold px-2.5 py-1.5 rounded-lg
                                  bg-lavender/30 text-lavender active:scale-90 transition-all"
                     >
-                      사용 ▶
+                      {S.useBtn}
                     </button>
                   </div>
                 ))}
